@@ -1,0 +1,15 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Stub photos: stubs/{stubId}/{photoId}
+    match /stubs/{stubId}/{photoId} {
+      // Anyone can read (images may be embedded in public stubs)
+      allow read: if true;
+
+      // Only authenticated users can write; enforce 10 MB size limit and allowed types
+      allow write: if request.auth != null
+        && request.resource.size <= 10 * 1024 * 1024
+        && request.resource.contentType.matches('image/(jpeg|png|webp)');
+    }
+  }
+}

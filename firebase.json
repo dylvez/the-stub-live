@@ -1,0 +1,72 @@
+{
+  "hosting": {
+    "public": "dist",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "/api/setlistfm/**",
+        "function": {
+          "functionId": "setlistfmProxy",
+          "region": "us-east1"
+        }
+      },
+      {
+        "source": "/api/jambase/**",
+        "function": {
+          "functionId": "jambaseProxy",
+          "region": "us-east1"
+        }
+      },
+      {
+        "source": "/api/spotify-auth/**",
+        "function": {
+          "functionId": "spotifyAuthProxy",
+          "region": "us-east1"
+        }
+      },
+      {
+        "source": "/api/spotify/**",
+        "function": {
+          "functionId": "spotifyProxy",
+          "region": "us-east1"
+        }
+      },
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default",
+      "ignore": [
+        "node_modules",
+        ".git"
+      ]
+    }
+  ],
+  "firestore": {
+    "database": "(default)",
+    "location": "nam5",
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "auth": {
+    "providers": {
+      "emailPassword": true,
+      "googleSignIn": {
+        "oAuthBrandDisplayName": "The Stub Live",
+        "supportEmail": "dylanfulmer@gmail.com"
+      }
+    }
+  },
+  "storage": {
+    "rules": "storage.rules"
+  }
+}
