@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import {
-  ArrowLeft, ExternalLink, Share2, MapPin, Calendar, Clock,
+  ArrowLeft, ExternalLink, Share2, MapPin, Calendar, Clock, Globe,
   PenTool, Navigation, Ticket, Music, Lightbulb, Headphones,
 } from 'lucide-react';
 import { Card, Badge, Button } from '@/components/ui';
@@ -247,41 +247,98 @@ export function EventPage(): React.JSX.Element {
           )}
         </div>
 
-        {/* Venue Card */}
-        {venue && (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-            <Link to={`/venue/${venue.id}`} className="block">
-              <Card className="mb-6 hover:border-stub-amber/30 transition-colors">
-                <div className="flex gap-3">
+        {/* Artist & Venue Cards — side by side */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="grid grid-cols-2 gap-3 mb-6"
+        >
+          {/* Artist Card */}
+          {artist && (
+            <div
+              onClick={() => navigate(`/artist/${event.artistIds[0]}`)}
+              className="cursor-pointer"
+              role="link"
+            >
+              <Card className="h-full hover:border-stub-amber/30 transition-colors">
+                <div className="flex flex-col items-center text-center">
+                  {artist.images.primary ? (
+                    <img
+                      src={artist.images.primary}
+                      alt={artist.name}
+                      className="w-14 h-14 rounded-full object-cover mb-2"
+                    />
+                  ) : (
+                    <div className="w-14 h-14 rounded-full bg-gradient-to-br from-stub-amber/15 to-stub-coral/15 flex items-center justify-center mb-2">
+                      <span className="text-lg font-display font-bold text-stub-amber/40">{artist.name.charAt(0)}</span>
+                    </div>
+                  )}
+                  <h3 className="font-display font-bold text-stub-text text-sm leading-tight truncate w-full">{artist.name}</h3>
+                  {artist.genres.length > 0 && (
+                    <div className="flex flex-wrap justify-center gap-1 mt-1.5">
+                      {artist.genres.slice(0, 2).map((g) => (
+                        <Badge key={g} variant="coral" className="text-[9px]">{g}</Badge>
+                      ))}
+                    </div>
+                  )}
+                  {(artist.externalIds.websiteUrl || artist.aiBriefing?.websiteUrl) && (
+                    <a
+                      href={artist.externalIds.websiteUrl || artist.aiBriefing?.websiteUrl || ''}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="inline-flex items-center gap-1 text-[11px] text-stub-cyan hover:text-stub-cyan/80 transition-colors mt-2"
+                    >
+                      <Globe className="w-3 h-3" />
+                      Official Site
+                    </a>
+                  )}
+                </div>
+              </Card>
+            </div>
+          )}
+
+          {/* Venue Card */}
+          {venue && (
+            <div
+              onClick={() => navigate(`/venue/${venue.id}`)}
+              className="cursor-pointer"
+              role="link"
+            >
+              <Card className="h-full hover:border-stub-amber/30 transition-colors">
+                <div className="flex flex-col items-center text-center">
                   {venue.images?.primary ? (
                     <img
                       src={venue.images.primary}
                       alt={venue.name}
-                      className="w-20 h-20 rounded-lg object-cover shrink-0"
+                      className="w-14 h-14 rounded-lg object-cover mb-2"
                     />
                   ) : (
-                    <div className="w-20 h-20 rounded-lg bg-gradient-to-br from-stub-cyan/15 to-stub-amber/15 flex items-center justify-center shrink-0">
-                      <MapPin className="w-6 h-6 text-stub-cyan/40" />
+                    <div className="w-14 h-14 rounded-lg bg-gradient-to-br from-stub-cyan/15 to-stub-amber/15 flex items-center justify-center mb-2">
+                      <MapPin className="w-5 h-5 text-stub-cyan/40" />
                     </div>
                   )}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-display font-bold text-stub-text text-base truncate">{venue.name}</h3>
-                      <Badge variant="muted" className="shrink-0">{venue.venueType}</Badge>
-                    </div>
-                    <p className="text-xs text-stub-muted flex items-center gap-1">
-                      <MapPin className="w-3 h-3" />
-                      {venue.address}, {venue.city}, {venue.state}
-                    </p>
-                    {venue.capacity && (
-                      <p className="text-xs text-stub-muted mt-1">Capacity: {venue.capacity.toLocaleString()}</p>
-                    )}
-                  </div>
+                  <h3 className="font-display font-bold text-stub-text text-sm leading-tight truncate w-full">{venue.name}</h3>
+                  <p className="text-[11px] text-stub-muted mt-0.5 truncate w-full">{venue.city}, {venue.state}</p>
+                  <Badge variant="muted" className="text-[9px] mt-1.5">{venue.venueType}</Badge>
+                  {venue.website && (
+                    <a
+                      href={venue.website}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="inline-flex items-center gap-1 text-[11px] text-stub-cyan hover:text-stub-cyan/80 transition-colors mt-2"
+                    >
+                      <Globe className="w-3 h-3" />
+                      Official Site
+                    </a>
+                  )}
                 </div>
               </Card>
-            </Link>
-          </motion.div>
-        )}
+            </div>
+          )}
+        </motion.div>
 
         {/* AI Event Briefing */}
         {(briefing || briefingLoading) && (
@@ -356,46 +413,6 @@ export function EventPage(): React.JSX.Element {
           </motion.div>
         )}
 
-        {/* Artist Preview */}
-        {artist && (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
-            <Card className="mb-6">
-              <div className="flex gap-3">
-                {artist.images.primary ? (
-                  <img
-                    src={artist.images.primary}
-                    alt={artist.name}
-                    className="w-16 h-16 rounded-lg object-cover shrink-0"
-                  />
-                ) : (
-                  <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-stub-amber/15 to-stub-coral/15 flex items-center justify-center shrink-0">
-                    <span className="text-xl font-display font-bold text-stub-amber/40">{artist.name.charAt(0)}</span>
-                  </div>
-                )}
-                <div className="flex-1 min-w-0">
-                  <Link to={`/artist/${event.artistIds[0]}`} className="hover:text-stub-amber transition-colors">
-                    <h3 className="font-display font-bold text-stub-text text-base">{artist.name}</h3>
-                  </Link>
-                  {artist.genres.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mt-1">
-                      {artist.genres.slice(0, 3).map((g) => (
-                        <Badge key={g} variant="coral" className="text-[10px]">{g}</Badge>
-                      ))}
-                    </div>
-                  )}
-                  {artist.aiBriefing?.liveReputation && (
-                    <p className="text-xs text-stub-muted mt-2 line-clamp-2">{artist.aiBriefing.liveReputation}</p>
-                  )}
-                </div>
-              </div>
-              <Link to={`/artist/${event.artistIds[0]}`}>
-                <Button variant="secondary" className="w-full mt-3" icon={<Music className="w-4 h-4" />}>
-                  View Artist
-                </Button>
-              </Link>
-            </Card>
-          </motion.div>
-        )}
 
         {/* Additional Ticket Sources */}
         {ticketSources.length > 0 && (
