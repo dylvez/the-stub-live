@@ -8,7 +8,7 @@ if (getApps().length === 0) {
   initializeApp();
 }
 
-const anthropicKey = defineSecret("ANTHROPIC_API_KEY");
+const perplexityKey = defineSecret("PERPLEXITY_API_KEY");
 
 const SYSTEM_PROMPT = `You are a music journalist writing concise briefings for concert-goers.
 Given information about an artist, produce a JSON object (no markdown, no code fences) with these fields:
@@ -47,7 +47,7 @@ function buildUserPrompt(params) {
 exports.generateArtistBriefing = onCall(
   {
     region: "us-east1",
-    secrets: [anthropicKey],
+    secrets: [perplexityKey],
     timeoutSeconds: 60,
     memory: "256MiB",
   },
@@ -93,35 +93,36 @@ exports.generateArtistBriefing = onCall(
     );
 
     try {
-      const apiKey = anthropicKey.value();
+      const apiKey = perplexityKey.value();
       if (!apiKey) {
-        throw new HttpsError("failed-precondition", "ANTHROPIC_API_KEY secret not configured");
+        throw new HttpsError("failed-precondition", "PERPLEXITY_API_KEY secret not configured");
       }
 
       const userPrompt = buildUserPrompt({ name, ...params });
 
-      const response = await fetch("https://api.anthropic.com/v1/messages", {
+      const response = await fetch("https://api.perplexity.ai/chat/completions", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-api-key": apiKey,
-          "anthropic-version": "2023-06-01",
+          "Authorization": `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
+          model: "sonar-pro",
           max_tokens: 512,
-          system: SYSTEM_PROMPT,
-          messages: [{ role: "user", content: userPrompt }],
+          messages: [
+            { role: "system", content: SYSTEM_PROMPT },
+            { role: "user", content: userPrompt },
+          ],
         }),
       });
 
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`Claude API error ${response.status}: ${errorText}`);
+        throw new Error(`Perplexity API error ${response.status}: ${errorText}`);
       }
 
-      const claudeData = await response.json();
-      let jsonStr = claudeData.content?.[0]?.text ?? "";
+      const aiData = await response.json();
+      let jsonStr = aiData.choices?.[0]?.message?.content ?? "";
 
       // Strip markdown code fences if present
       if (jsonStr.includes("```")) {

@@ -1,7 +1,7 @@
 const { onCall, HttpsError } = require("firebase-functions/v2/https");
 const { defineSecret } = require("firebase-functions/params");
 
-const anthropicApiKey = defineSecret("ANTHROPIC_API_KEY");
+const perplexityApiKey = defineSecret("PERPLEXITY_API_KEY");
 
 const TM_API_KEY = "KtwO1AgR5iBSxQdZs1lII0MVBlv7kmUA";
 const JB_API_KEY = "3c577d7a-9471-42b3-82e4-92b7af426d63";
@@ -194,7 +194,7 @@ You're chatting with a user in {city}, {state}.
 exports.askStub = onCall(
   {
     region: "us-east1",
-    secrets: [anthropicApiKey],
+    secrets: [perplexityApiKey],
     timeoutSeconds: 90,
     memory: "256MiB",
   },
@@ -273,35 +273,33 @@ exports.askStub = onCall(
       .replace("{state}", state)
       .replace("{events}", eventsText);
 
-    const claudeMessages = messages.map((m) => ({
-      role: m.role,
-      content: m.content,
-    }));
+    const chatMessages = [
+      { role: "system", content: systemPrompt },
+      ...messages.map((m) => ({ role: m.role, content: m.content })),
+    ];
 
     try {
-      const response = await fetch("https://api.anthropic.com/v1/messages", {
+      const response = await fetch("https://api.perplexity.ai/chat/completions", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-api-key": anthropicApiKey.value(),
-          "anthropic-version": "2023-06-01",
+          "Authorization": `Bearer ${perplexityApiKey.value()}`,
         },
         body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
+          model: "sonar-pro",
           max_tokens: 1024,
-          system: systemPrompt,
-          messages: claudeMessages,
+          messages: chatMessages,
         }),
       });
 
       if (!response.ok) {
         const errBody = await response.text();
-        console.error("Claude API error:", response.status, errBody);
+        console.error("Perplexity API error:", response.status, errBody);
         throw new HttpsError("internal", "AI service error.");
       }
 
       const data = await response.json();
-      const text = data.content?.[0]?.text ?? "I'm not sure how to answer that. Try asking about upcoming shows!";
+      const text = data.choices?.[0]?.message?.content ?? "I'm not sure how to answer that. Try asking about upcoming shows!";
 
       return { response: text };
     } catch (err) {

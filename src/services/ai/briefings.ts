@@ -47,7 +47,7 @@ export async function generateArtistBriefing(
       soundDescription: data.briefing.soundDescription ?? '',
       liveReputation: data.briefing.liveReputation ?? '',
       forFansOf: Array.isArray(data.briefing.forFansOf) ? data.briefing.forFansOf : [],
-      modelVersion: 'claude-sonnet-4-20250514',
+      modelVersion: 'sonar-pro',
     };
   } catch (err) {
     console.warn('AI briefing generation failed:', err);

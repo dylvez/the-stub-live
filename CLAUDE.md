@@ -1,7 +1,7 @@
 # CLAUDE.md — The Stub Live
 
 ## Project Overview
-**The Stub Live** (thestub.live) is a live music companion PWA connecting discovery, journaling, and social sharing for concert-goers. React + TypeScript + Firebase + Claude API. See THE-STUB-LIVE-SPEC.md for the full product specification.
+**The Stub Live** (thestub.live) is a live music companion PWA connecting discovery, journaling, and social sharing for concert-goers. React + TypeScript + Firebase + Perplexity AI API. See THE-STUB-LIVE-SPEC.md for the full product specification.
 
 ## Quick Reference
 
@@ -23,7 +23,7 @@ The **Stub** is the atomic unit of this app. It's a user's record of a concert t
 - **Framer Motion** for animations
 - **React Router v6** for navigation
 - **Firebase**: Auth, Cloud Firestore, Cloud Storage, Cloud Functions, Hosting
-- **Anthropic Claude API** (claude-sonnet-4-20250514) for AI features
+- **Perplexity AI API** (sonar-pro) for AI features
 - **PWA-enabled** with service worker for offline support
 
 ## File Structure
@@ -115,7 +115,7 @@ VITE_FIREBASE_PROJECT_ID=
 VITE_FIREBASE_STORAGE_BUCKET=
 VITE_FIREBASE_MESSAGING_SENDER_ID=
 VITE_FIREBASE_APP_ID=
-VITE_ANTHROPIC_API_KEY=
+VITE_PERPLEXITY_API_KEY=
 VITE_SPOTIFY_CLIENT_ID=
 VITE_BANDSINTOWN_API_KEY=
 VITE_TICKETMASTER_API_KEY=
@@ -165,7 +165,7 @@ This is the single most important visual element in the app. It should feel like
 | Decision | Choice | Rationale |
 |---|---|---|
 | Database | Cloud Firestore | Real-time sync, speed of development, Dylan's Firebase experience from Can I Go There |
-| AI Model | Claude Sonnet 4 | Better at nuanced taste description and recommendation reasoning than alternatives |
+| AI Model | Perplexity sonar-pro | Web-grounded AI with real-time search for accurate artist and concert information |
 | Deployment | PWA on Firebase Hosting | Cross-platform, faster to ship than native, installable, offline-capable |
 | Dark mode | Default | Concerts are dark; the app should feel native to that environment |
 | Reactions | Emoji set (🔥🎶💀🤘❤️😭) | More expressive than binary likes, fits music culture |
