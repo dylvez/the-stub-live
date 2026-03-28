@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import {
@@ -13,6 +13,7 @@ import { useEvents } from '@/hooks/useEvents';
 import { useAuth } from '@/contexts/AuthContext';
 import { db } from '@/services/firebase/config';
 import { isSetlistFmConfigured } from '@/services/api/config';
+import { memScanByPrefix } from '@/services/api/cache';
 import { searchSetlistsByVenue } from '@/services/api/setlistfm';
 import { convertSetlistsToEvents } from '@/utils/setlistToEvent';
 import type { EventData, ArtistData } from '@/types';
@@ -22,8 +23,59 @@ export function VenuePage(): React.JSX.Element {
   const navigate = useNavigate();
   const { venue, isLoading } = useVenue(id);
 
-  // Upcoming events from Ticketmaster
-  const { events: allEvents, artists } = useEvents({ venueId: id });
+  // Upcoming events from APIs (may miss cross-source events)
+  const { events: apiEvents, artists: apiArtists } = useEvents({ venueId: id });
+
+  // Supplement with cached events that match this venue by name or ID.
+  // This catches events from other sources (e.g. Jambase events when viewing a TM venue)
+  // by scanning the in-memory event cache from the discovery page.
+  const { allEvents, artists } = useMemo(() => {
+    if (!venue) return { allEvents: apiEvents, artists: apiArtists };
+
+    const mergedEvents = [...apiEvents];
+    const mergedArtists = new Map(apiArtists);
+    const existingIds = new Set(apiEvents.map((e) => e.id));
+    const venueName = venue.name.toLowerCase().trim();
+
+    interface CachedEventData {
+      events: EventData[];
+      artists: [string, ArtistData][];
+      venues: [string, import('@/types').VenueData][];
+    }
+
+    try {
+      const cachedEntries = memScanByPrefix<CachedEventData>('events-multi:');
+
+      for (const cached of cachedEntries) {
+        if (!cached?.events) continue;
+
+        const cachedVenueMap = new Map(cached.venues);
+        const cachedArtistMap = new Map(cached.artists);
+
+        for (const event of cached.events) {
+          if (existingIds.has(event.id)) continue;
+
+          // Match by venue ID or by venue name
+          const eventVenue = cachedVenueMap.get(event.venueId);
+          const matchesId = event.venueId === id;
+          const matchesName = eventVenue && eventVenue.name.toLowerCase().trim() === venueName;
+
+          if (matchesId || matchesName) {
+            mergedEvents.push(event);
+            existingIds.add(event.id);
+            // Bring along the artist data
+            const primaryArtistId = event.artistIds[0];
+            if (primaryArtistId && !mergedArtists.has(primaryArtistId)) {
+              const cachedArtist = cachedArtistMap.get(primaryArtistId);
+              if (cachedArtist) mergedArtists.set(primaryArtistId, cachedArtist);
+            }
+          }
+        }
+      }
+    } catch { /* cache scan errors are non-fatal */ }
+
+    return { allEvents: mergedEvents, artists: mergedArtists };
+  }, [apiEvents, apiArtists, venue?.name, id]);
 
   const { user } = useAuth();
 
@@ -94,7 +146,9 @@ export function VenuePage(): React.JSX.Element {
   }
 
   const now = new Date();
-  const upcomingEvents = allEvents.filter((e) => e.date.toDate() > now);
+  const upcomingEvents = allEvents
+    .filter((e) => e.date.toDate() > now)
+    .sort((a, b) => a.date.toDate().getTime() - b.date.toDate().getTime());
 
   // Combine TM past events with setlist.fm past events, sorted by date desc
   const tmPastEvents = allEvents.filter((e) => e.date.toDate() <= now);

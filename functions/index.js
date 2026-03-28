@@ -1,7 +1,9 @@
 const { onRequest } = require("firebase-functions/v2/https");
 const { generateArtistBriefing } = require("./generateBriefing");
+const { generateEventBriefing } = require("./generateEventBriefing");
 const { askStub } = require("./askStub");
 exports.generateArtistBriefing = generateArtistBriefing;
+exports.generateEventBriefing = generateEventBriefing;
 exports.askStub = askStub;
 
 /**

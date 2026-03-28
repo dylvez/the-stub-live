@@ -340,7 +340,7 @@ export function DiscoveryPage(): React.JSX.Element {
                     whileHover={{ y: -4 }}
                     className="min-w-[220px] max-w-[220px] bg-stub-surface rounded-xl border border-stub-border
                       overflow-hidden cursor-pointer group"
-                    onClick={() => navigate(`/artist/${event.artistIds[0]}`)}
+                    onClick={() => navigate(`/event/${event.id}`, { state: { event, artist, venue } })}
                   >
                     <div className="h-28 relative">
                       {artist?.images.primary ? (
@@ -445,11 +445,24 @@ export function DiscoveryPage(): React.JSX.Element {
               return (
                 <EventCard
                   key={event.id}
+                  eventId={event.id}
+                  artistName={artist?.name ?? 'Unknown Artist'}
+                  artistImage={artist?.images.primary}
+                  artistId={event.artistIds[0]}
+                  venueId={event.venueId}
+                  supportActs={supportActs.length > 0 ? supportActs : undefined}
+                  venueName={venue?.name ?? 'Unknown Venue'}
+                  venueNeighborhood={venue?.city}
+                  date={event.date.toDate()}
+                  doorsTime={event.doorsTime?.toDate()}
+                  priceMin={event.priceRange?.min}
+                  priceMax={event.priceRange?.max}
+                  ticketUrl={event.ticketUrl}
+                  source={event.source}
+                  genres={artist?.genres}
                   event={event}
                   artist={artist}
                   venue={venue}
-                  supportActs={supportActs}
-                  onClick={() => navigate(`/artist/${event.artistIds[0]}`)}
                 />
               );
             })}
@@ -504,6 +517,8 @@ export function DiscoveryPage(): React.JSX.Element {
                     eventId={event.id}
                     artistName={artist?.name ?? 'Unknown Artist'}
                     artistImage={artist?.images.primary}
+                    artistId={event.artistIds[0]}
+                    venueId={event.venueId}
                     supportActs={supportActs.length > 0 ? supportActs : undefined}
                     venueName={venue?.name ?? 'Unknown Venue'}
                     venueNeighborhood={venue?.city}
@@ -513,8 +528,11 @@ export function DiscoveryPage(): React.JSX.Element {
                     priceMin={event.priceRange?.min}
                     priceMax={event.priceRange?.max}
                     ticketUrl={event.ticketUrl}
+                    source={event.source}
                     genres={artist?.genres}
-                    onClick={() => navigate(`/artist/${event.artistIds[0]}`)}
+                    event={event}
+                    artist={artist}
+                    venue={venue}
                   />
                 );
               })}

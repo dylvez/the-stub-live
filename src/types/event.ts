@@ -32,3 +32,12 @@ export interface EventData {
   aiRecommendationReason?: string;
   lastUpdated: Timestamp;
 }
+
+export interface AiEventBriefing {
+  showPreview: string;
+  venueInsight: string;
+  proTips: string[];
+  listeningGuide: string[];
+  generatedAt?: Timestamp;
+  modelVersion: string;
+}

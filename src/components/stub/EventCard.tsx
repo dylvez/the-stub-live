@@ -3,6 +3,8 @@ import { motion } from 'framer-motion';
 import { MapPin, Calendar, Clock, ExternalLink, Bookmark, Users, PenTool } from 'lucide-react';
 import { Badge } from '@/components/ui';
 import { getArtistDisplayImage } from '@/utils/artistImage';
+import { isTicketPurchaseUrl, getTicketPlatformName } from '@/utils/ticketUrl';
+import type { EventData, ArtistData, VenueData } from '@/types';
 
 /** Map genre keywords to accent colors for visual variety */
 function getGenreAccent(genres?: string[]): { border: string; glow: string; badge: string; text: string; bg: string } {
@@ -48,6 +50,17 @@ interface EventCardProps {
   /** Venue photo URL (e.g. from Google Places) — used as fallback before genre images */
   venueImage?: string;
   eventId?: string;
+  /** Artist ID for linking to the artist page */
+  artistId?: string;
+  /** Venue ID for linking to the venue page */
+  venueId?: string;
+  /** Event data source — used to filter Jambase ticket URLs */
+  source?: string;
+  /** Full event/artist/venue objects for passing via router state to EventPage */
+  event?: EventData;
+  artist?: ArtistData;
+  venue?: VenueData;
+  /** @deprecated Use the built-in event page navigation instead */
   onClick?: () => void;
 }
 
@@ -68,6 +81,12 @@ export function EventCard({
   genres,
   venueImage,
   eventId,
+  artistId,
+  venueId,
+  source,
+  event,
+  artist,
+  venue,
   onClick,
 }: EventCardProps): React.JSX.Element {
   const navigate = useNavigate();
@@ -84,6 +103,34 @@ export function EventCard({
     ? doorsTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
     : null;
 
+  const hasTicketUrl = isTicketPurchaseUrl(ticketUrl, source);
+
+  function handleCardClick(): void {
+    // If eventId is available, navigate to the event page
+    if (eventId) {
+      navigate(`/event/${eventId}`, {
+        state: { event, artist, venue, supportActNames: supportActs },
+      });
+    } else if (onClick) {
+      // Fallback to legacy onClick
+      onClick();
+    }
+  }
+
+  function handleArtistClick(e: React.MouseEvent): void {
+    e.stopPropagation();
+    if (artistId) {
+      navigate(`/artist/${artistId}`);
+    }
+  }
+
+  function handleVenueClick(e: React.MouseEvent): void {
+    e.stopPropagation();
+    if (venueId) {
+      navigate(`/venue/${venueId}`);
+    }
+  }
+
   function handleStubIt(e: React.MouseEvent): void {
     e.stopPropagation();
     const params = new URLSearchParams();
@@ -99,7 +146,7 @@ export function EventCard({
     <motion.div
       whileHover={{ y: -2 }}
       whileTap={{ scale: 0.98 }}
-      onClick={onClick}
+      onClick={handleCardClick}
       className={`bg-gradient-to-r ${accent.bg} bg-stub-surface rounded-xl ${accent.border} overflow-hidden cursor-pointer
         ${accent.glow} transition-all duration-300 paper-grain group`}
     >
@@ -127,7 +174,11 @@ export function EventCard({
             <div className="flex items-start justify-between gap-2">
               <div>
                 {isTonight && <Badge variant="coral" className="mb-1.5">TONIGHT</Badge>}
-                <h3 className="font-display font-bold text-stub-text text-base leading-tight">
+                <h3
+                  className={`font-display font-bold text-stub-text text-base leading-tight ${artistId ? 'hover:text-stub-amber transition-colors' : ''}`}
+                  onClick={artistId ? handleArtistClick : undefined}
+                  role={artistId ? 'link' : undefined}
+                >
                   {artistName}
                 </h3>
                 {supportActs && supportActs.length > 0 && (
@@ -145,7 +196,11 @@ export function EventCard({
               </button>
             </div>
 
-            <div className="flex items-center gap-1 mt-1 text-stub-muted text-xs">
+            <div
+              className={`flex items-center gap-1 mt-1 text-stub-muted text-xs ${venueId ? 'hover:text-stub-text cursor-pointer transition-colors' : ''}`}
+              onClick={venueId ? handleVenueClick : undefined}
+              role={venueId ? 'link' : undefined}
+            >
               <MapPin className="w-3 h-3 shrink-0" />
               <span className="truncate">{venueName}{venueNeighborhood ? ` · ${venueNeighborhood}` : ''}</span>
             </div>
@@ -193,7 +248,7 @@ export function EventCard({
 
           {/* Actions row */}
           <div className="flex items-center gap-3 mt-2">
-            {ticketUrl && (
+            {hasTicketUrl && ticketUrl && (
               <a
                 href={ticketUrl}
                 target="_blank"
@@ -202,7 +257,7 @@ export function EventCard({
                 className="inline-flex items-center gap-1 text-xs text-stub-amber hover:text-stub-amber-dim transition-colors"
               >
                 <ExternalLink className="w-3 h-3" />
-                Get Tickets
+                {getTicketPlatformName(ticketUrl)}
               </a>
             )}
             <button

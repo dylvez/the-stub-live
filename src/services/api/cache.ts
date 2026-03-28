@@ -116,6 +116,17 @@ function evictIfNeeded(newBytes: number): void {
   }
 }
 
+/** Scan memory cache entries whose keys start with the given prefix. Returns non-expired data. */
+export function memScanByPrefix<T>(prefix: string): T[] {
+  const results: T[] = [];
+  for (const [key, entry] of memoryCache) {
+    if (key.startsWith(prefix) && !isExpired(entry)) {
+      results.push(entry.data as T);
+    }
+  }
+  return results;
+}
+
 // Combined cache: check memory first, then storage
 export function cacheGet<T>(key: string, persistent = false): T | null {
   const mem = memGet<T>(key);

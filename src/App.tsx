@@ -18,6 +18,7 @@ const StubDetailPage = lazy(() => import('@/features/journal/StubDetailPage').th
 const UserProfilePage = lazy(() => import('@/features/social/UserProfilePage').then((m) => ({ default: m.UserProfilePage })));
 const AnalyticsPage = lazy(() => import('@/features/analytics/AnalyticsPage').then((m) => ({ default: m.AnalyticsPage })));
 const AskStubPage = lazy(() => import('@/features/recommendations/AskStubPage').then((m) => ({ default: m.AskStubPage })));
+const EventPage = lazy(() => import('@/features/event/EventPage').then((m) => ({ default: m.EventPage })));
 
 function LoadingSpinner(): React.JSX.Element {
   return (
@@ -44,6 +45,7 @@ export default function App(): React.JSX.Element {
               <Route path="/" element={<DiscoveryPage />} />
               <Route path="/search" element={<SearchPage />} />
               <Route path="/artist/:id" element={<ArtistPage />} />
+              <Route path="/event/:id" element={<EventPage />} />
               <Route path="/venue/:id" element={<VenuePage />} />
               <Route path="/stub/:id" element={<StubDetailPage />} />
               <Route path="/user/:id" element={<UserProfilePage />} />
