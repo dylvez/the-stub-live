@@ -412,6 +412,17 @@ export function ArtistPage(): React.JSX.Element {
                         <div className="text-xs text-stub-muted pl-6">+{setlist.songs.length - 8} more</div>
                       )}
                     </div>
+                    <div className="flex items-center justify-end mt-2 pt-2 border-t border-stub-border/50">
+                      <a
+                        href={`https://www.setlist.fm/setlist/-/-${setlist.id}.html`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1 text-[10px] text-stub-muted hover:text-stub-text transition-colors"
+                      >
+                        <ExternalLink className="w-2.5 h-2.5" />
+                        via setlist.fm
+                      </a>
+                    </div>
                   </Card>
                 ))
               ) : (
