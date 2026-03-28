@@ -275,7 +275,12 @@ export function ArtistPage(): React.JSX.Element {
                 upcomingEvents.map((event) => {
                   const venue = venues.get(event.venueId);
                   return (
-                    <Card key={event.id} hover>
+                    <Card
+                      key={event.id}
+                      hover
+                      className="cursor-pointer"
+                      onClick={() => navigate(`/event/${event.id}`, { state: { event, artist, venue } })}
+                    >
                       <div className="flex items-center justify-between">
                         <div>
                           <div className="flex items-center gap-1.5 text-sm text-stub-text">
@@ -303,13 +308,15 @@ export function ArtistPage(): React.JSX.Element {
                               href={event.ticketUrl}
                               target="_blank"
                               rel="noopener noreferrer"
+                              onClick={(e) => e.stopPropagation()}
                               className="text-stub-amber hover:text-stub-amber-dim transition-colors"
                             >
                               <ExternalLink className="w-4 h-4" />
                             </a>
                           )}
                           <button
-                            onClick={() => {
+                            onClick={(e) => {
+                              e.stopPropagation();
                               const params = new URLSearchParams();
                               params.set('eventId', event.id);
                               params.set('artist', artist?.name ?? '');
