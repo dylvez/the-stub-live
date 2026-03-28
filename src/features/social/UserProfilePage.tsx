@@ -3,8 +3,9 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { doc, getDoc, collection, query, where, orderBy, getDocs } from 'firebase/firestore';
 import { motion } from 'framer-motion';
 import {
-  ArrowLeft, MapPin, Calendar, Star, Ticket, UserPlus, UserMinus, Loader2,
+  ArrowLeft, MapPin, Calendar, Star, Ticket, UserPlus, UserMinus,
 } from 'lucide-react';
+import { BrandedSpinner } from '@/components/ui/BrandedSpinner';
 import { Card, Badge, Button } from '@/components/ui';
 import { db } from '@/services/firebase/config';
 import { followUser, unfollowUser } from '@/services/firebase/social';
@@ -95,7 +96,8 @@ export function UserProfilePage(): React.JSX.Element {
 
   if (!profile) {
     return (
-      <div className="flex items-center justify-center h-64 text-stub-muted">
+      <div className="flex flex-col items-center justify-center h-64 text-stub-muted">
+        <img src="/images/empty-user-notfound.png" alt="User not found" className="w-32 h-32 mb-4 opacity-80" />
         User not found.
       </div>
     );
@@ -152,7 +154,7 @@ export function UserProfilePage(): React.JSX.Element {
             variant={isFollowing ? 'secondary' : 'primary'}
             size="sm"
             icon={followLoading
-              ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ? <BrandedSpinner size={14} />
               : isFollowing
                 ? <UserMinus className="w-3.5 h-3.5" />
                 : <UserPlus className="w-3.5 h-3.5" />

@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
-import { Star, MapPin, Calendar, Music, MessageCircle, Share2 } from 'lucide-react';
+import { MapPin, Calendar, Music, MessageCircle } from 'lucide-react';
+import { ACTION_ICONS } from '@/utils/constants';
 import { Badge } from '@/components/ui';
 import { ReactionIcon } from '@/components/ui/ReactionIcon';
 import type { StubData } from '@/types';
@@ -25,11 +26,13 @@ function formatStubDate(date: Date): string {
 
 function StarRating({ rating }: { rating: number }): React.JSX.Element {
   return (
-    <div className="flex gap-0.5">
+    <div className="flex gap-0.5" role="img" aria-label={`${rating} of 5`}>
       {[1, 2, 3, 4, 5].map((i) => (
-        <Star
+        <img
           key={i}
-          className={`w-3.5 h-3.5 ${i <= rating ? 'fill-stub-amber text-stub-amber' : 'text-stub-border-light'}`}
+          src={i <= rating ? '/images/star-filled.png' : '/images/star-empty.png'}
+          alt=""
+          className="w-3.5 h-3.5"
         />
       ))}
     </div>
@@ -216,7 +219,7 @@ export function StubCard({
                 className="p-1 text-stub-muted hover:text-stub-text transition-colors"
                 onClick={(e) => e.stopPropagation()}
               >
-                <Share2 className="w-3.5 h-3.5" />
+                <img src={ACTION_ICONS.share} alt="Share" className="w-3.5 h-3.5" />
               </button>
             </div>
           </div>

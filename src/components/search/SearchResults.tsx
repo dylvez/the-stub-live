@@ -1,8 +1,10 @@
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
-  Search, MapPin, Music, Loader2, ExternalLink, Ticket, PenTool,
+  Search, MapPin, Music, ExternalLink, Ticket,
 } from 'lucide-react';
+import { BrandedSpinner } from '@/components/ui/BrandedSpinner';
+import { StubItButton } from '@/components/ui/StubItButton';
 import { Badge } from '@/components/ui';
 import type { ArtistData, VenueData, EventData } from '@/types';
 
@@ -110,7 +112,7 @@ export function SearchResults({
       {/* Loading */}
       {isSearching && (
         <div className="flex items-center justify-center gap-2 py-6 text-stub-muted text-sm">
-          <Loader2 className="w-4 h-4 animate-spin" />
+          <BrandedSpinner size={16} />
           Searching...
         </div>
       )}
@@ -170,8 +172,8 @@ export function SearchResults({
                   </div>
                   <div className="flex items-center gap-1.5">
                     {isPast && <Badge variant="muted" className="text-[9px]">Past</Badge>}
-                    {event.source === 'setlistfm' && <Badge variant="cyan" className="text-[9px]">setlist.fm</Badge>}
-                    {event.source === 'bandsintown' && <Badge variant="amber" className="text-[9px]">bandsintown</Badge>}
+                    {event.source === 'setlistfm' && <img src="/images/platform-setlistfm.svg" alt="setlist.fm" className="h-3" />}
+                    {event.source === 'bandsintown' && <img src="/images/platform-bandsintown.svg" alt="Bandsintown" className="h-3" />}
                     {event.ticketUrl && !isPast && (
                       <a
                         href={event.ticketUrl}
@@ -185,18 +187,7 @@ export function SearchResults({
                       </a>
                     )}
                     {!compact && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigate(buildStubUrl(event, artist, venue));
-                        }}
-                        className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-medium
-                          bg-stub-amber/10 text-stub-amber hover:bg-stub-amber/20 transition-colors"
-                        title="Create a Stub for this show"
-                      >
-                        <PenTool className="w-2.5 h-2.5" />
-                        Stub It
-                      </button>
+                      <StubItButton onClick={() => navigate(buildStubUrl(event, artist, venue))} />
                     )}
                   </div>
                 </div>

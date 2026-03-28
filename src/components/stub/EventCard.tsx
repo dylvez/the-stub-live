@@ -1,7 +1,8 @@
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { MapPin, Calendar, Clock, ExternalLink, Bookmark, Users, PenTool } from 'lucide-react';
+import { MapPin, Calendar, Clock, ExternalLink, Users } from 'lucide-react';
 import { Badge } from '@/components/ui';
+import { StubItButton } from '@/components/ui/StubItButton';
 import { getArtistDisplayImage } from '@/utils/artistImage';
 import { isTicketPurchaseUrl, getTicketPlatformName } from '@/utils/ticketUrl';
 import type { EventData, ArtistData, VenueData } from '@/types';
@@ -131,8 +132,7 @@ export function EventCard({
     }
   }
 
-  function handleStubIt(e: React.MouseEvent): void {
-    e.stopPropagation();
+  function handleStubIt(): void {
     const params = new URLSearchParams();
     if (eventId) params.set('eventId', eventId);
     params.set('artist', artistName);
@@ -188,12 +188,6 @@ export function EventCard({
                   </p>
                 )}
               </div>
-              <button
-                className="p-1 text-stub-muted hover:text-stub-text transition-colors shrink-0"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <Bookmark className="w-4 h-4" />
-              </button>
             </div>
 
             <div
@@ -260,14 +254,7 @@ export function EventCard({
                 {getTicketPlatformName(ticketUrl)}
               </a>
             )}
-            <button
-              onClick={handleStubIt}
-              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium
-                bg-stub-violet/10 text-stub-violet hover:bg-stub-violet/20 transition-colors"
-            >
-              <PenTool className="w-3 h-3" />
-              Stub It
-            </button>
+            <StubItButton onClick={handleStubIt} />
           </div>
         </div>
       </div>

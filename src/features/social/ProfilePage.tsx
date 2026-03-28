@@ -11,13 +11,13 @@ import { db } from '@/services/firebase/config';
 import type { StubVisibility, SocialLinks } from '@/types';
 
 const SOCIAL_PLATFORMS = [
-  { key: 'instagram' as const, label: 'Instagram', prefix: 'instagram.com/', icon: '📸', urlBase: 'https://instagram.com/' },
-  { key: 'x' as const, label: 'X (Twitter)', prefix: 'x.com/', icon: '𝕏', urlBase: 'https://x.com/' },
-  { key: 'facebook' as const, label: 'Facebook', prefix: 'facebook.com/', icon: '📘', urlBase: 'https://facebook.com/' },
-  { key: 'tiktok' as const, label: 'TikTok', prefix: 'tiktok.com/@', icon: '🎵', urlBase: 'https://tiktok.com/@' },
-  { key: 'threads' as const, label: 'Threads', prefix: 'threads.net/@', icon: '🧵', urlBase: 'https://threads.net/@' },
-  { key: 'spotify' as const, label: 'Spotify', prefix: 'open.spotify.com/', icon: '🎧', urlBase: 'https://open.spotify.com/user/' },
-  { key: 'youtube' as const, label: 'YouTube', prefix: 'youtube.com/@', icon: '▶️', urlBase: 'https://youtube.com/@' },
+  { key: 'instagram' as const, label: 'Instagram', prefix: 'instagram.com/', iconPath: '/images/platform-instagram.svg', urlBase: 'https://instagram.com/' },
+  { key: 'x' as const, label: 'X (Twitter)', prefix: 'x.com/', iconPath: '/images/platform-x.svg', urlBase: 'https://x.com/' },
+  { key: 'facebook' as const, label: 'Facebook', prefix: 'facebook.com/', iconPath: '/images/platform-facebook.svg', urlBase: 'https://facebook.com/' },
+  { key: 'tiktok' as const, label: 'TikTok', prefix: 'tiktok.com/@', iconPath: '/images/platform-tiktok.svg', urlBase: 'https://tiktok.com/@' },
+  { key: 'threads' as const, label: 'Threads', prefix: 'threads.net/@', iconPath: '/images/platform-threads.svg', urlBase: 'https://threads.net/@' },
+  { key: 'spotify' as const, label: 'Spotify', prefix: 'open.spotify.com/', iconPath: '/images/platform-spotify.svg', urlBase: 'https://open.spotify.com/user/' },
+  { key: 'youtube' as const, label: 'YouTube', prefix: 'youtube.com/@', iconPath: '/images/platform-youtube.svg', urlBase: 'https://youtube.com/@' },
 ] as const;
 
 interface StubRecord {
@@ -201,9 +201,9 @@ export function ProfilePage(): React.JSX.Element {
             Social Accounts
           </h3>
           <div className="space-y-2">
-            {SOCIAL_PLATFORMS.map(({ key, label, icon }) => (
+            {SOCIAL_PLATFORMS.map(({ key, label, iconPath }) => (
               <div key={key} className="flex items-center gap-2">
-                <span className="w-6 text-center text-sm">{icon}</span>
+                <img src={iconPath} alt={label} className="w-4 h-4 ml-1" />
                 <input
                   type="text"
                   value={editSocialLinks[key] ?? ''}
@@ -222,7 +222,7 @@ export function ProfilePage(): React.JSX.Element {
           const activeLinks = links ? SOCIAL_PLATFORMS.filter((p) => links[p.key]) : [];
           return activeLinks.length > 0 ? (
             <div className="flex flex-wrap gap-2 mb-6">
-              {activeLinks.map(({ key, label, icon, urlBase }) => (
+              {activeLinks.map(({ key, label, iconPath, urlBase }) => (
                 <a
                   key={key}
                   href={`${urlBase}${links![key]}`}
@@ -230,7 +230,7 @@ export function ProfilePage(): React.JSX.Element {
                   rel="noopener noreferrer"
                   className="flex items-center gap-1.5 px-3 py-1.5 bg-stub-surface border border-stub-border rounded-full text-xs text-stub-muted hover:text-stub-text hover:border-stub-amber/50 transition-colors"
                 >
-                  <span>{icon}</span>
+                  <img src={iconPath} alt={label} className="w-4 h-4" />
                   <span>@{links![key]}</span>
                   <ExternalLink className="w-3 h-3" />
                 </a>

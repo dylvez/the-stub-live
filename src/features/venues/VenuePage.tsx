@@ -3,9 +3,11 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import {
   ArrowLeft, MapPin, Users, Calendar, Accessibility, Star,
-  Navigation, PenTool, ExternalLink, Clock, Loader2, Phone, Globe, ChevronDown,
-  StickyNote, Edit2, Check, X,
+  Navigation, ExternalLink, Clock, Phone, Globe, ChevronDown,
+  StickyNote, Edit2, Check, X, Video, Play,
 } from 'lucide-react';
+import { BrandedSpinner } from '@/components/ui/BrandedSpinner';
+import { StubItButton } from '@/components/ui/StubItButton';
 import { doc, getDoc, setDoc, Timestamp } from 'firebase/firestore';
 import { Card, Badge, Button } from '@/components/ui';
 import { useVenue } from '@/hooks/useVenue';
@@ -15,6 +17,7 @@ import { db } from '@/services/firebase/config';
 import { isSetlistFmConfigured } from '@/services/api/config';
 import { memScanByPrefix } from '@/services/api/cache';
 import { searchSetlistsByVenue } from '@/services/api/setlistfm';
+import { searchLivePerformances, type YouTubeVideo } from '@/services/api/youtube';
 import { convertSetlistsToEvents } from '@/utils/setlistToEvent';
 import type { EventData, ArtistData } from '@/types';
 
@@ -80,8 +83,9 @@ export function VenuePage(): React.JSX.Element {
   const { user } = useAuth();
 
   // Shows tab
-  type ShowsTab = 'upcoming' | 'recent';
+  type ShowsTab = 'upcoming' | 'recent' | 'youtube';
   const [showsTab, setShowsTab] = useState<ShowsTab>('upcoming');
+  const [videos, setVideos] = useState<YouTubeVideo[]>([]);
 
   // Personal venue notes
   const [venueNote, setVenueNote] = useState('');
@@ -135,6 +139,13 @@ export function VenuePage(): React.JSX.Element {
       .finally(() => setSfmLoading(false));
   }, [venue?.name]);
 
+  // Fetch YouTube videos when YouTube tab is selected
+  useEffect(() => {
+    if (showsTab === 'youtube' && venue && videos.length === 0) {
+      searchLivePerformances(venue.name, 6).then(setVideos).catch(() => {});
+    }
+  }, [showsTab, venue, videos.length]);
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -145,7 +156,10 @@ export function VenuePage(): React.JSX.Element {
 
   if (!venue) {
     return (
-      <div className="flex items-center justify-center h-64 text-stub-muted">Venue not found.</div>
+      <div className="flex flex-col items-center justify-center h-64 text-stub-muted">
+        <img src="/images/empty-venue-notfound.png" alt="Venue not found" className="w-32 h-32 mb-4 opacity-80" />
+        Venue not found.
+      </div>
     );
   }
 
@@ -376,41 +390,32 @@ export function VenuePage(): React.JSX.Element {
           </Card>
         </section>
 
-        {/* Shows — tabbed: Upcoming / Recent */}
+        {/* Shows — tabbed: Upcoming Shows | Recent Shows | YouTube: {name} */}
         <section className="mb-6">
           <div className="flex items-center gap-1 mb-4 border-b border-stub-border">
-            <button
-              onClick={() => setShowsTab('upcoming')}
-              className={`flex items-center gap-1.5 px-3 py-2 text-sm font-semibold transition-colors border-b-2 -mb-px
-                ${showsTab === 'upcoming'
-                  ? 'text-stub-amber border-stub-amber'
-                  : 'text-stub-muted border-transparent hover:text-stub-text'}`}
-            >
-              <Calendar className="w-4 h-4" />
-              Upcoming
-              {upcomingEvents.length > 0 && (
-                <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded-full
-                  ${showsTab === 'upcoming' ? 'bg-stub-amber/15 text-stub-amber' : 'bg-stub-border text-stub-muted'}`}>
-                  {upcomingEvents.length}
-                </span>
-              )}
-            </button>
-            <button
-              onClick={() => setShowsTab('recent')}
-              className={`flex items-center gap-1.5 px-3 py-2 text-sm font-semibold transition-colors border-b-2 -mb-px
-                ${showsTab === 'recent'
-                  ? 'text-stub-amber border-stub-amber'
-                  : 'text-stub-muted border-transparent hover:text-stub-text'}`}
-            >
-              <Clock className="w-4 h-4" />
-              Recent
-              {allPastEvents.length > 0 && (
-                <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded-full
-                  ${showsTab === 'recent' ? 'bg-stub-amber/15 text-stub-amber' : 'bg-stub-border text-stub-muted'}`}>
-                  {allPastEvents.length}
-                </span>
-              )}
-            </button>
+            {([
+              { key: 'upcoming' as const, icon: Calendar, label: 'Upcoming Shows', count: upcomingEvents.length },
+              { key: 'recent' as const, icon: Clock, label: 'Recent Shows', count: allPastEvents.length },
+              { key: 'youtube' as const, icon: Video, label: `YouTube: ${venue.name}`, count: 0 },
+            ]).map(({ key, icon: Icon, label, count }) => (
+              <button
+                key={key}
+                onClick={() => setShowsTab(key)}
+                className={`flex items-center gap-1.5 px-3 py-2 text-sm font-semibold transition-colors border-b-2 -mb-px
+                  ${showsTab === key
+                    ? 'text-stub-amber border-stub-amber'
+                    : 'text-stub-muted border-transparent hover:text-stub-text'}`}
+              >
+                <Icon className="w-4 h-4" />
+                <span className="truncate max-w-[120px]">{label}</span>
+                {count > 0 && (
+                  <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded-full
+                    ${showsTab === key ? 'bg-stub-amber/15 text-stub-amber' : 'bg-stub-border text-stub-muted'}`}>
+                    {count}
+                  </span>
+                )}
+              </button>
+            ))}
           </div>
 
           {showsTab === 'upcoming' && (
@@ -439,7 +444,7 @@ export function VenuePage(): React.JSX.Element {
             <>
               {sfmLoading && (
                 <div className="flex items-center justify-center gap-2 py-4 text-stub-muted text-sm">
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <BrandedSpinner size={16} />
                   Loading past shows...
                 </div>
               )}
@@ -462,6 +467,38 @@ export function VenuePage(): React.JSX.Element {
                 </div>
               ) : null}
             </>
+          )}
+
+          {/* YouTube tab */}
+          {showsTab === 'youtube' && (
+            <div className="space-y-3">
+              {videos.length > 0 ? (
+                videos.map((video) => (
+                  <a
+                    key={video.id}
+                    href={`https://www.youtube.com/watch?v=${video.id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex gap-3 p-2 rounded-lg hover:bg-stub-surface-hover transition-colors"
+                  >
+                    <div className="w-32 h-20 rounded-lg overflow-hidden shrink-0 relative">
+                      <img src={video.thumbnail} alt={video.title} className="w-full h-full object-cover" />
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                        <Play className="w-6 h-6 text-white fill-white" />
+                      </div>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm text-stub-text line-clamp-2">{video.title}</div>
+                      <div className="text-xs text-stub-muted mt-1">{video.channelTitle}</div>
+                    </div>
+                  </a>
+                ))
+              ) : (
+                <div className="text-center py-6 text-stub-muted text-sm">
+                  Loading videos...
+                </div>
+              )}
+            </div>
           )}
         </section>
       </div>
@@ -531,10 +568,10 @@ function EventRow({
           </div>
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          {event.priceRange && (
+          {!isPast && event.priceRange && (
             <span className="text-xs font-mono text-stub-muted">${event.priceRange.min}</span>
           )}
-          {event.ticketUrl && (
+          {!isPast && event.ticketUrl && (
             <a
               href={event.ticketUrl}
               target="_blank"
@@ -545,14 +582,7 @@ function EventRow({
               <ExternalLink className="w-4 h-4" />
             </a>
           )}
-          <button
-            onClick={onStubIt}
-            className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium
-              bg-stub-amber/10 text-stub-amber hover:bg-stub-amber/20 transition-colors"
-          >
-            <PenTool className="w-3 h-3" />
-            Stub It
-          </button>
+          <StubItButton onClick={onStubIt} />
         </div>
       </div>
     </Card>

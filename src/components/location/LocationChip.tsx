@@ -1,4 +1,5 @@
-import { MapPin, ChevronDown, Loader2 } from 'lucide-react';
+import { MapPin, ChevronDown } from 'lucide-react';
+import { BrandedSpinner } from '@/components/ui/BrandedSpinner';
 
 interface LocationChipProps {
   city: string;
@@ -15,7 +16,7 @@ export function LocationChip({ city, state, isDetecting, onClick }: LocationChip
         text-xs text-stub-muted hover:text-stub-text hover:border-stub-amber/50 transition-colors"
     >
       {isDetecting ? (
-        <Loader2 className="w-3.5 h-3.5 animate-spin text-stub-amber" />
+        <BrandedSpinner size={14} className="text-stub-amber" />
       ) : (
         <MapPin className="w-3.5 h-3.5 text-stub-amber" />
       )}

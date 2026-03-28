@@ -4,9 +4,11 @@ import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import {
   ArrowLeft, ExternalLink, Share2, Video, Play, Globe,
-  Calendar, MapPin, ListMusic, PenTool, Loader2,
+  Calendar, Clock, MapPin, ListMusic,
 } from 'lucide-react';
+import { BrandedSpinner } from '@/components/ui/BrandedSpinner';
 import { Card, Badge, Button } from '@/components/ui';
+import { StubItButton } from '@/components/ui/StubItButton';
 import { useArtist } from '@/hooks/useArtist';
 import { useEvents } from '@/hooks/useEvents';
 import { generateArtistBriefing } from '@/services/ai/briefings';
@@ -15,7 +17,7 @@ import { formatSetlistDate } from '@/utils/setlistToEvent';
 import { searchLivePerformances, type YouTubeVideo } from '@/services/api/youtube';
 import { getArtistSetlists, type SetlistResult } from '@/services/api/setlistfm';
 
-type ArtistTab = 'shows' | 'watch' | 'setlists';
+type ArtistTab = 'shows' | 'recent' | 'youtube';
 
 export function ArtistPage(): React.JSX.Element {
   const { id } = useParams<{ id: string }>();
@@ -27,16 +29,16 @@ export function ArtistPage(): React.JSX.Element {
   const [setlists, setSetlists] = useState<SetlistResult[]>([]);
   const [briefing, setBriefing] = useState<AiBriefing | null>(artist?.aiBriefing ?? null);
 
-  // Fetch YouTube videos when Watch tab is selected
+  // Fetch YouTube videos when YouTube tab is selected
   useEffect(() => {
-    if (activeTab === 'watch' && artist && videos.length === 0) {
+    if (activeTab === 'youtube' && artist && videos.length === 0) {
       searchLivePerformances(artist.name, 6).then(setVideos).catch(() => {});
     }
   }, [activeTab, artist, videos.length]);
 
-  // Fetch setlists when Setlists tab is selected
+  // Fetch setlists when Recent Shows tab is selected
   useEffect(() => {
-    if (activeTab === 'setlists' && mbArtist && setlists.length === 0) {
+    if (activeTab === 'recent' && mbArtist && setlists.length === 0) {
       getArtistSetlists(mbArtist.mbid, 5).then(setSetlists).catch(() => {});
     }
   }, [activeTab, mbArtist, setlists.length]);
@@ -64,7 +66,8 @@ export function ArtistPage(): React.JSX.Element {
 
   if (!artist) {
     return (
-      <div className="flex items-center justify-center h-64 text-stub-muted">
+      <div className="flex flex-col items-center justify-center h-64 text-stub-muted">
+        <img src="/images/empty-artist-notfound.png" alt="Artist not found" className="w-32 h-32 mb-4 opacity-80" />
         Artist not found.
       </div>
     );
@@ -194,7 +197,7 @@ export function ArtistPage(): React.JSX.Element {
               ) : briefingLoading ? (
                 <div className="space-y-2 animate-pulse">
                   <div className="flex items-center gap-2 text-xs text-stub-amber">
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <BrandedSpinner size={14} />
                     Generating AI Briefing...
                   </div>
                   <div className="h-3 bg-stub-border rounded w-full" />
@@ -242,14 +245,14 @@ export function ArtistPage(): React.JSX.Element {
           </motion.div>
         )}
 
-        {/* Tabs: Upcoming Shows | Watch | Setlists */}
+        {/* Tabs: Upcoming Shows | Recent Shows | YouTube: {name} */}
         <section className="mb-6">
           <div className="flex border-b border-stub-border mb-4">
             {([
-              { key: 'shows' as const, icon: Calendar, label: 'Upcoming Shows' },
-              { key: 'watch' as const, icon: Video, label: 'Watch' },
-              { key: 'setlists' as const, icon: ListMusic, label: 'Setlists' },
-            ]).map(({ key, icon: Icon, label }) => (
+              { key: 'shows' as const, icon: Calendar, label: 'Upcoming Shows', count: upcomingEvents.length },
+              { key: 'recent' as const, icon: Clock, label: 'Recent Shows', count: setlists.length },
+              { key: 'youtube' as const, icon: Video, label: `YouTube: ${artist.name}`, count: 0 },
+            ]).map(({ key, icon: Icon, label, count }) => (
               <button
                 key={key}
                 onClick={() => setActiveTab(key)}
@@ -260,9 +263,12 @@ export function ArtistPage(): React.JSX.Element {
                   }`}
               >
                 <Icon className="w-4 h-4" />
-                {label}
-                {key === 'shows' && upcomingEvents.length > 0 && (
-                  <span className="text-[10px] font-mono text-stub-muted">{upcomingEvents.length}</span>
+                <span className="truncate max-w-[120px]">{label}</span>
+                {count > 0 && (
+                  <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded-full
+                    ${activeTab === key ? 'bg-stub-amber/15 text-stub-amber' : 'bg-stub-border text-stub-muted'}`}>
+                    {count}
+                  </span>
                 )}
               </button>
             ))}
@@ -314,9 +320,7 @@ export function ArtistPage(): React.JSX.Element {
                               <ExternalLink className="w-4 h-4" />
                             </a>
                           )}
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
+                          <StubItButton onClick={() => {
                               const params = new URLSearchParams();
                               params.set('eventId', event.id);
                               params.set('artist', artist?.name ?? '');
@@ -324,13 +328,7 @@ export function ArtistPage(): React.JSX.Element {
                               params.set('date', event.date.toDate().toISOString());
                               if (artist?.images.primary) params.set('artistImage', artist.images.primary);
                               navigate(`/create?${params.toString()}`);
-                            }}
-                            className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium
-                              bg-stub-amber/10 text-stub-amber hover:bg-stub-amber/20 transition-colors"
-                          >
-                            <PenTool className="w-3 h-3" />
-                            Stub It
-                          </button>
+                            }} />
                         </div>
                       </div>
                     </Card>
@@ -344,8 +342,8 @@ export function ArtistPage(): React.JSX.Element {
             </div>
           )}
 
-          {/* Watch tab: YouTube live videos */}
-          {activeTab === 'watch' && (
+          {/* YouTube tab */}
+          {activeTab === 'youtube' && (
             <div className="space-y-3">
               {videos.length > 0 ? (
                 videos.map((video) => (
@@ -376,8 +374,8 @@ export function ArtistPage(): React.JSX.Element {
             </div>
           )}
 
-          {/* Setlists tab */}
-          {activeTab === 'setlists' && (
+          {/* Recent Shows tab */}
+          {activeTab === 'recent' && (
             <div className="space-y-4">
               {setlists.length > 0 ? (
                 setlists.map((setlist) => (
@@ -399,8 +397,7 @@ export function ArtistPage(): React.JSX.Element {
                         {setlist.songs.length > 0 && (
                           <Badge variant="muted">{setlist.songs.length} songs</Badge>
                         )}
-                        <button
-                          onClick={() => {
+                        <StubItButton onClick={() => {
                             const params = new URLSearchParams();
                             params.set('artist', artist?.name ?? '');
                             params.set('venue', setlist.venueName);
@@ -409,13 +406,7 @@ export function ArtistPage(): React.JSX.Element {
                             params.set('date', isoDate);
                             if (artist?.images.primary) params.set('artistImage', artist.images.primary);
                             navigate(`/create?${params.toString()}`);
-                          }}
-                          className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium
-                            bg-stub-amber/10 text-stub-amber hover:bg-stub-amber/20 transition-colors"
-                        >
-                          <PenTool className="w-3 h-3" />
-                          Stub It
-                        </button>
+                          }} />
                       </div>
                     </div>
                     <div className="space-y-0.5">
@@ -448,7 +439,8 @@ export function ArtistPage(): React.JSX.Element {
                   </Card>
                 ))
               ) : (
-                <div className="text-center py-6 text-stub-muted text-sm">
+                <div className="flex flex-col items-center text-center py-6 text-stub-muted text-sm">
+                  <img src="/images/empty-no-setlists.png" alt="No setlists found" className="w-32 h-32 mb-4 opacity-80" />
                   {mbArtist ? 'Loading setlists...' : 'No setlist data available'}
                 </div>
               )}

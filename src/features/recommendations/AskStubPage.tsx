@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { ArrowLeft, Send, Sparkles, Loader2, Music } from 'lucide-react';
+import { ArrowLeft, Send, Sparkles, Music } from 'lucide-react';
+import { BrandedSpinner } from '@/components/ui/BrandedSpinner';
 import { httpsCallable } from 'firebase/functions';
 import { motion } from 'framer-motion';
 import { functions } from '@/services/firebase/config';
@@ -194,7 +195,7 @@ export function AskStubPage(): React.JSX.Element {
         {isLoading && (
           <div className="flex justify-start">
             <div className="bg-stub-surface border border-stub-border rounded-2xl rounded-bl-md px-4 py-3">
-              <Loader2 className="w-4 h-4 text-stub-amber animate-spin" />
+              <BrandedSpinner size={16} className="text-stub-amber" />
             </div>
           </div>
         )}

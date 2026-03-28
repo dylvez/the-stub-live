@@ -10,8 +10,9 @@ const ASSETS_DIR = path.join(__dirname, '..', 'public', 'images');
 
 if (!fs.existsSync(ASSETS_DIR)) fs.mkdirSync(ASSETS_DIR, { recursive: true });
 
-const PALETTE = 'Use colors: amber #E8A838, rose-pink #FF4F6D, violet #7B68EE, cyan #4FC4FF, deep navy #0A0A12, dark purple #161324. ';
+const PALETTE = 'Use colors: amber #E8A838, coral #FF4F4F, violet #7B68EE, cyan #4FC4FF, deep navy #0A0A12, dark purple #161324, muted gray #8A8580. ';
 const STYLE = 'Flat illustrated style, clean vector shapes, minimal detail, bold geometric forms. Dark background #0A0A12. No text, no words, no letters. ';
+const ICON_STYLE = 'Flat illustrated style, bold simple silhouette, minimal detail, single geometric shape centered on a solid dark background with exact hex color #0D0D0D. No text, no words, no letters. ';
 
 const IMAGES = [
   { filename: 'logo-stub.png', prompt: STYLE + PALETTE + 'A stylized concert ticket stub icon. The stub has a torn/perforated right edge. Use amber #E8A838 as the primary color with violet #7B68EE accents. Modern app icon — simple, bold, recognizable. Dark navy background #0A0A12.' },
@@ -30,7 +31,49 @@ const IMAGES = [
   { filename: 'genre-punk.png', prompt: STYLE + 'A flat stylized lightning bolt icon on dark background #0A0A12. Rose-pink #FF4F6D color. Simple bold design. 128x128.' },
   { filename: 'genre-electronic.png', prompt: STYLE + 'A flat stylized synthesizer waveform icon on dark background #0A0A12. Cyan #4FC4FF color. Simple bold design. 128x128.' },
   { filename: 'genre-folk.png', prompt: STYLE + 'A flat stylized acoustic guitar icon on dark background #0A0A12. Amber #E8A838 warm tones. Simple bold design. 128x128.' },
-  { filename: 'genre-hiphop.png', prompt: STYLE + 'A flat stylized microphone icon on dark background #0A0A12. Rose-pink #FF4F6D color. Simple bold design. 128x128.' },
+  { filename: 'genre-hiphop.png', prompt: STYLE + 'A flat stylized microphone icon on dark background #0A0A12. Coral #FF4F4F color. Simple bold design. 128x128.' },
+
+  // --- Bottom Nav: Heavily Themed ---
+  { filename: 'nav-home-heavy.png', prompt: ICON_STYLE + PALETTE + 'A venue marquee arch with small round lights along the arch edge. Amber #E8A838 color. 128x128 icon.' },
+  { filename: 'nav-search-heavy.png', prompt: ICON_STYLE + PALETTE + 'A dramatic spotlight beam sweeping down from above onto a small stage area. Cyan #4FC4FF color. 128x128 icon.' },
+  { filename: 'nav-create-heavy.png', prompt: ICON_STYLE + PALETTE + 'A torn concert ticket stub with a bold plus sign in the center. Torn perforated edge on right side. Amber #E8A838 color. 128x128 icon.' },
+  { filename: 'nav-stubs-heavy.png', prompt: ICON_STYLE + PALETTE + 'A stack of three overlapping concert ticket stubs fanned out. Violet #7B68EE color. 128x128 icon.' },
+  { filename: 'nav-askstub-heavy.png', prompt: ICON_STYLE + PALETTE + 'A starburst sparkle with radiating light rays, like a stage pyro effect. Cyan #4FC4FF color. 128x128 icon.' },
+
+  // --- Bottom Nav: Subtly Themed ---
+  { filename: 'nav-home-subtle.png', prompt: ICON_STYLE + PALETTE + 'A clean simple house icon shape with a subtle arched top like a theater marquee. Amber #E8A838 color. 128x128 icon.' },
+  { filename: 'nav-search-subtle.png', prompt: ICON_STYLE + PALETTE + 'A magnifying glass icon with a subtle spotlight glow emanating from the lens. Cyan #4FC4FF color. 128x128 icon.' },
+  { filename: 'nav-create-subtle.png', prompt: ICON_STYLE + PALETTE + 'A simple ticket stub outline shape with a small plus sign. Clean geometric. Amber #E8A838 color. 128x128 icon.' },
+  { filename: 'nav-stubs-subtle.png', prompt: ICON_STYLE + PALETTE + 'A single clean concert ticket stub icon, simple rectangular shape with one torn edge. Violet #7B68EE color. 128x128 icon.' },
+  { filename: 'nav-askstub-subtle.png', prompt: ICON_STYLE + PALETTE + 'A clean four-pointed sparkle star shape, simple and geometric. Cyan #4FC4FF color. 128x128 icon.' },
+
+  // --- Discovery Section Headers ---
+  { filename: 'section-trending.png', prompt: ICON_STYLE + PALETTE + 'Rising heat lines or flame chart, three wavy vertical lines ascending with warmth. Coral #FF4F4F color. 128x128 icon.' },
+  { filename: 'section-radar.png', prompt: ICON_STYLE + PALETTE + 'Concentric radar pulse rings radiating outward from a center point. Cyan #4FC4FF color. 128x128 icon.' },
+  { filename: 'section-new-to-town.png', prompt: ICON_STYLE + PALETTE + 'A small suitcase with a guitar neck poking out the top. Amber #E8A838 color. 128x128 icon.' },
+  { filename: 'section-discover.png', prompt: ICON_STYLE + PALETTE + 'A pair of binoculars with small stage light reflections in the lenses. Cyan #4FC4FF color. 128x128 icon.' },
+
+  // --- Empty State Illustrations ---
+  { filename: 'empty-no-feed.png', prompt: STYLE + PALETTE + 'An empty dark concert hall viewed from the back, rows of empty seats, a dim stage in the distance with a single faint amber spotlight. Moody and atmospheric. No people.' },
+  { filename: 'empty-artist-notfound.png', prompt: STYLE + PALETTE + 'A single broken guitar pick cracked in half on a dark surface. Coral #FF4F4F color tones. Dramatic spotlight on the broken pick. Moody and minimal.' },
+  { filename: 'empty-venue-notfound.png', prompt: STYLE + PALETTE + 'A closed venue door with a dim marquee above it, lights turned off. Dark tonight feeling. Violet #7B68EE tones. Atmospheric and moody.' },
+  { filename: 'empty-user-notfound.png', prompt: STYLE + PALETTE + 'An empty concert venue seat in a spotlight beam. The seat is empty, spotlight illuminating dust particles. Cyan #4FC4FF spotlight color. Lonely atmospheric feel.' },
+  { filename: 'empty-no-setlists.png', prompt: STYLE + PALETTE + 'A blank piece of setlist paper lying on a dark stage floor next to a microphone stand base. Amber #E8A838 warm tones. Atmospheric concert stage lighting.' },
+
+  // --- Action Icons ---
+  { filename: 'action-stub-it.png', prompt: ICON_STYLE + PALETTE + 'A pen or pencil writing on a small ticket stub shape. Amber #E8A838 color. Bold simple design. 128x128 icon.' },
+  { filename: 'action-share.png', prompt: ICON_STYLE + PALETTE + 'A concert ticket being handed forward, shown from the side as if passing it to someone. Cyan #4FC4FF color. 128x128 icon.' },
+  { filename: 'action-save.png', prompt: ICON_STYLE + PALETTE + 'A ticket stub being slipped into a pocket or collection slot. Violet #7B68EE color. 128x128 icon.' },
+
+  // --- Loading Spinner ---
+  { filename: 'loading-spinner.png', prompt: ICON_STYLE + PALETTE + 'A vinyl record viewed from directly above, perfectly centered. Concentric groove circles. Small center hole. Amber #E8A838 highlight on grooves. Must be perfectly center-symmetric for rotation animation. 128x128 icon.' },
+
+  // --- Star Rating: Guitar Pick Style ---
+  { filename: 'star-filled.png', prompt: ICON_STYLE + 'A guitar pick shape (rounded triangle pointing down), completely filled solid. Amber #E8A838 color on black background #0A0A12. 64x64 icon.' },
+  { filename: 'star-half.png', prompt: ICON_STYLE + 'A guitar pick shape (rounded triangle pointing down). Left half filled solid amber #E8A838, right half is just a thin outline in muted gray #8A8580. Black background #0A0A12. 64x64 icon.' },
+  { filename: 'star-empty.png', prompt: ICON_STYLE + 'A guitar pick shape (rounded triangle pointing down), outline only with thin stroke. Muted gray #8A8580 color on black background #0A0A12. 64x64 icon.' },
+  { filename: 'star-filled-small.png', prompt: ICON_STYLE + 'A guitar pick shape (rounded triangle pointing down), completely filled solid. Amber #E8A838 color on black background #0A0A12. Very simple bold shape. 32x32 icon.' },
+  { filename: 'star-empty-small.png', prompt: ICON_STYLE + 'A guitar pick shape (rounded triangle pointing down), outline only. Muted gray #8A8580 color on black background #0A0A12. Very simple. 32x32 icon.' },
 ];
 
 function makeRequest(prompt) {

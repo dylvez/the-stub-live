@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Ticket, Star, MapPin, Calendar, Users } from 'lucide-react';
+import { MapPin, Calendar } from 'lucide-react';
 import { Card, Badge } from '@/components/ui';
 import { useAuth } from '@/contexts/AuthContext';
 import { useActivityFeed, type FeedItem } from '@/hooks/useActivityFeed';
@@ -23,7 +23,7 @@ export function FeedPage(): React.JSX.Element {
   if (following.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center px-4">
-        <Users className="w-12 h-12 text-stub-border-light mb-4" />
+        <img src="/images/empty-no-feed.png" alt="Your feed is empty" className="w-48 h-48 mb-4 opacity-80" />
         <h3 className="font-display font-bold text-stub-text text-lg mb-1">Your feed is empty</h3>
         <p className="text-sm text-stub-muted max-w-xs">
           Follow people to see their concert stubs here. Explore events and find people who go to the same shows.
@@ -35,7 +35,7 @@ export function FeedPage(): React.JSX.Element {
   if (items.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center px-4">
-        <Ticket className="w-12 h-12 text-stub-border-light mb-4" />
+        <img src="/images/empty-no-stubs.png" alt="No stubs yet" className="w-48 h-48 mb-4 opacity-80" />
         <h3 className="font-display font-bold text-stub-text text-lg mb-1">No stubs yet</h3>
         <p className="text-sm text-stub-muted max-w-xs">
           The people you follow haven't published any stubs yet. Check back soon!
@@ -93,9 +93,11 @@ function FeedStubCard({ item, onClick }: { item: FeedItem; onClick: () => void }
             {item.rating > 0 && (
               <div className="flex items-center gap-0.5 mt-2">
                 {[1, 2, 3, 4, 5].map((i) => (
-                  <Star
+                  <img
                     key={i}
-                    className={`w-3.5 h-3.5 ${i <= item.rating ? 'fill-stub-amber text-stub-amber' : 'text-stub-border'}`}
+                    src={i <= item.rating ? '/images/star-filled.png' : '/images/star-empty.png'}
+                    alt=""
+                    className="w-3.5 h-3.5"
                   />
                 ))}
               </div>

@@ -4,9 +4,10 @@ import { Timestamp } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search, MapPin, Calendar, Star, Zap, Users, Music,
-  Camera, PenTool, Eye, ArrowLeft, ArrowRight, Check, Ticket, X, Image, Loader2,
+  Camera, PenTool, Eye, ArrowLeft, ArrowRight, Check, Ticket, X, Image,
   ChevronUp, ChevronDown,
 } from 'lucide-react';
+import { BrandedSpinner } from '@/components/ui/BrandedSpinner';
 import { doc, setDoc, Timestamp as FsTimestamp } from 'firebase/firestore';
 import { Button, Card, Input } from '@/components/ui';
 import { SearchResults } from '@/components/search';
@@ -892,7 +893,7 @@ export function CreateStubPage(): React.JSX.Element {
                   hover:border-stub-amber/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {setlistImporting ? (
-                  <Loader2 className="w-5 h-5 text-stub-amber animate-spin" />
+                  <BrandedSpinner size={20} className="text-stub-amber" />
                 ) : (
                   <Music className="w-5 h-5 text-stub-amber" />
                 )}

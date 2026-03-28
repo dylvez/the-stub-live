@@ -4,9 +4,10 @@ import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import {
   ArrowLeft, ExternalLink, Share2, MapPin, Calendar, Clock, Globe,
-  PenTool, Navigation, Ticket, Music, Lightbulb, Headphones,
+  Navigation, Ticket, Music, Lightbulb, Headphones,
 } from 'lucide-react';
 import { Card, Badge, Button } from '@/components/ui';
+import { StubItButton } from '@/components/ui/StubItButton';
 import { useEvent } from '@/hooks/useEvent';
 import { isTicketPurchaseUrl, getTicketPlatformName, getTicketSourceLinks } from '@/utils/ticketUrl';
 import { generateEventBriefing } from '@/services/ai/briefings';
@@ -228,9 +229,7 @@ export function EventPage(): React.JSX.Element {
               </Button>
             </a>
           )}
-          <Button variant="secondary" icon={<PenTool className="w-4 h-4" />} onClick={handleStubIt}>
-            Stub It
-          </Button>
+          <StubItButton onClick={handleStubIt} size="md" />
           <Button variant="secondary" icon={<Share2 className="w-4 h-4" />} onClick={handleShare}>
             Share
           </Button>

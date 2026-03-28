@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Search, TrendingUp, Sparkles, Radio, MapPin, Map as MapIcon, ChevronRight, Filter } from 'lucide-react';
+import { Search, Map as MapIcon, ChevronRight, Filter } from 'lucide-react';
+import { SECTION_ICONS } from '@/utils/constants';
 import { Input, Card } from '@/components/ui';
 import { SearchResults } from '@/components/search';
 import { useSearch } from '@/hooks/useSearch';
@@ -221,7 +222,7 @@ export function SearchPage(): React.JSX.Element {
           {/* Browse sections */}
           <section className="mb-6">
             <h2 className="font-display font-bold text-stub-text text-lg mb-3 flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-stub-coral" />
+              <img src={SECTION_ICONS.trending} alt="Trending" className="w-5 h-5" />
               Trending in {userLocation.city}
             </h2>
             <div className="grid grid-cols-2 gap-2">
@@ -249,7 +250,7 @@ export function SearchPage(): React.JSX.Element {
 
           <section className="mb-6">
             <h2 className="font-display font-bold text-stub-text text-lg mb-3 flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-stub-cyan" />
+              <img src={SECTION_ICONS.discover} alt="Discover" className="w-5 h-5" />
               Discover
             </h2>
             <div className="space-y-2">
@@ -261,7 +262,7 @@ export function SearchPage(): React.JSX.Element {
               >
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-lg bg-stub-cyan/10 flex items-center justify-center text-stub-cyan">
-                    <Radio className="w-5 h-5" />
+                    <img src={SECTION_ICONS.radar} alt="Under the Radar" className="w-5 h-5" />
                   </div>
                   <div className="flex-1">
                     <div className="text-sm font-semibold text-stub-text">Under the Radar</div>
@@ -309,7 +310,7 @@ export function SearchPage(): React.JSX.Element {
               >
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-lg bg-stub-cyan/10 flex items-center justify-center text-stub-cyan">
-                    <MapPin className="w-5 h-5" />
+                    <img src={SECTION_ICONS.newToTown} alt="New to Town" className="w-5 h-5" />
                   </div>
                   <div className="flex-1">
                     <div className="text-sm font-semibold text-stub-text">New to Town</div>
