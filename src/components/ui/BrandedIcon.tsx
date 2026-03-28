@@ -1,19 +1,13 @@
-import type { LucideIcon } from 'lucide-react';
-
 interface BrandedIconProps {
   src: string;
-  fallbackIcon?: LucideIcon;
-  fallbackEmoji?: string;
   size?: number;
   alt: string;
   className?: string;
 }
 
-/** Renders a branded image icon with Lucide or emoji fallback */
+/** Renders a branded image icon */
 export function BrandedIcon({
   src,
-  fallbackIcon: FallbackIcon,
-  fallbackEmoji,
   size = 20,
   alt,
   className = '',

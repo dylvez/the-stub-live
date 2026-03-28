@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Search, Map as MapIcon, ChevronRight, Filter } from 'lucide-react';
+import { Map as MapIcon, ChevronRight, Filter } from 'lucide-react';
 import { SECTION_ICONS } from '@/utils/constants';
 import { Input, Card } from '@/components/ui';
 import { SearchResults } from '@/components/search';

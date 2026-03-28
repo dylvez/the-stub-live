@@ -4,7 +4,7 @@ import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import {
   ArrowLeft, ExternalLink, Share2, Video, Play, Globe,
-  Calendar, Clock, MapPin, ListMusic,
+  Calendar, Clock, MapPin,
 } from 'lucide-react';
 import { BrandedSpinner } from '@/components/ui/BrandedSpinner';
 import { Card, Badge, Button } from '@/components/ui';
