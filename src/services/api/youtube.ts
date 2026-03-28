@@ -23,9 +23,21 @@ interface YtSearchItem {
   };
 }
 
-/** Normalize a string for fuzzy matching: lowercase, strip punctuation, collapse whitespace */
+/** Decode HTML entities returned by the YouTube API (e.g. &amp; → &, &#39; → ') */
+function decodeHtmlEntities(s: string): string {
+  return s
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&#x27;/g, "'")
+    .replace(/&#(\d+);/g, (_, code) => String.fromCharCode(Number(code)));
+}
+
+/** Normalize a string for matching: lowercase, strip punctuation, collapse whitespace */
 function normalize(s: string): string {
-  return s.toLowerCase().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, ' ').trim();
+  return decodeHtmlEntities(s).toLowerCase().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, ' ').trim();
 }
 
 /** Check if a video title or channel name contains the artist name */
@@ -66,9 +78,9 @@ export async function searchLivePerformances(artistName: string, limit = 5): Pro
     .slice(0, limit)
     .map((item) => ({
       id: item.id.videoId,
-      title: item.snippet.title,
+      title: decodeHtmlEntities(item.snippet.title),
       thumbnail: item.snippet.thumbnails.high?.url ?? item.snippet.thumbnails.medium?.url ?? item.snippet.thumbnails.default?.url ?? '',
-      channelTitle: item.snippet.channelTitle,
+      channelTitle: decodeHtmlEntities(item.snippet.channelTitle),
       publishedAt: item.snippet.publishedAt,
     }));
 
