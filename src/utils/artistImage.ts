@@ -195,21 +195,29 @@ export function getGenreFallbackImage(genres?: string[], artistName = ''): strin
 }
 
 /**
- * Get the best available image for an artist, with genre-aware fallback.
+ * Get the best available image for an artist, with venue and genre-aware fallbacks.
  * This is the main function to use in components.
+ *
+ * Fallback chain: real artist image → venue image → genre fallback image
  *
  * @param artistImage - The image URL from the API (may be placeholder)
  * @param genres - Artist's genres for fallback selection
  * @param artistName - Used for deterministic fallback variety
- * @returns An object with the image URL and whether it's a fallback
+ * @param venueImage - Optional venue photo (e.g. from Google Places) used before genre fallback
+ * @returns An object with the image URL, whether it's a fallback, and fallback type
  */
 export function getArtistDisplayImage(
   artistImage: string | undefined,
   genres?: string[],
   artistName = '',
-): { url: string; isFallback: boolean } {
+  venueImage?: string,
+): { url: string; isFallback: boolean; fallbackType?: 'venue' | 'genre' } {
   if (!isPlaceholderImage(artistImage)) {
     return { url: artistImage!, isFallback: false };
   }
-  return { url: getGenreFallbackImage(genres, artistName), isFallback: true };
+  // Try venue image before genre fallback
+  if (venueImage && venueImage.trim() !== '') {
+    return { url: venueImage, isFallback: true, fallbackType: 'venue' };
+  }
+  return { url: getGenreFallbackImage(genres, artistName), isFallback: true, fallbackType: 'genre' };
 }

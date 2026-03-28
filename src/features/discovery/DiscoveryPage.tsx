@@ -167,11 +167,14 @@ export function DiscoveryPage(): React.JSX.Element {
   }, [events.length, venues.size]);
 
   // Enrich popular venues with Google Places photos
+  // Keyed by normalized venue name so all ID variants (TM, Jambase, etc.) resolve to the same enriched data
   const [enrichedVenues, setEnrichedVenues] = useState<Map<string, VenueData>>(new Map());
+  const normalizeVenueName = useCallback((name: string): string =>
+    name.toLowerCase().replace(/^the\s+/, '').replace(/['']/g, "'").trim(), []);
 
   const enrichPopularVenues = useCallback(async (venueList: { venue: VenueData; showCount: number }[]) => {
     if (!isGoogleMapsConfigured) return;
-    const toEnrich = venueList.filter((v) => !v.venue.placesEnriched && !enrichedVenues.has(v.venue.id));
+    const toEnrich = venueList.filter((v) => !v.venue.placesEnriched && !enrichedVenues.has(normalizeVenueName(v.venue.name)));
     if (toEnrich.length === 0) return;
 
     // Enrich sequentially to avoid hammering the API
@@ -179,11 +182,11 @@ export function DiscoveryPage(): React.JSX.Element {
       try {
         const enriched = await enrichVenueWithPlaces(v);
         if (enriched !== v) {
-          setEnrichedVenues((prev) => new Map(prev).set(v.id, enriched));
+          setEnrichedVenues((prev) => new Map(prev).set(normalizeVenueName(v.name), enriched));
         }
       } catch { /* best effort */ }
     }
-  }, [enrichedVenues]);
+  }, [enrichedVenues, normalizeVenueName]);
 
   useEffect(() => {
     if (popularVenues.length > 0) {
@@ -387,7 +390,7 @@ export function DiscoveryPage(): React.JSX.Element {
           {carouselTab === 'venues' && popularVenues.length > 0 && (
             <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
               {popularVenues.map(({ venue: baseVenue, showCount }) => {
-                const v = enrichedVenues.get(baseVenue.id) ?? baseVenue;
+                const v = enrichedVenues.get(normalizeVenueName(baseVenue.name)) ?? baseVenue;
                 return (
                   <motion.div
                     key={v.id}
@@ -492,7 +495,8 @@ export function DiscoveryPage(): React.JSX.Element {
             <>
               {upcomingEvents.map((event) => {
                 const artist = artists.get(event.artistIds[0]);
-                const venue = venues.get(event.venueId);
+                const baseVenue = venues.get(event.venueId);
+                const venue = (baseVenue && enrichedVenues.get(normalizeVenueName(baseVenue.name))) ?? baseVenue;
                 const supportActs = event.artistIds.slice(1).map((id) => artists.get(id)?.name).filter(Boolean) as string[];
                 return (
                   <EventCard
@@ -503,6 +507,7 @@ export function DiscoveryPage(): React.JSX.Element {
                     supportActs={supportActs.length > 0 ? supportActs : undefined}
                     venueName={venue?.name ?? 'Unknown Venue'}
                     venueNeighborhood={venue?.city}
+                    venueImage={venue?.images?.primary || undefined}
                     date={event.date.toDate()}
                     doorsTime={event.doorsTime?.toDate()}
                     priceMin={event.priceRange?.min}

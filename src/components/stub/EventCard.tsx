@@ -45,6 +45,8 @@ interface EventCardProps {
   isTonight?: boolean;
   attendeeCount?: number;
   genres?: string[];
+  /** Venue photo URL (e.g. from Google Places) — used as fallback before genre images */
+  venueImage?: string;
   eventId?: string;
   onClick?: () => void;
 }
@@ -64,12 +66,13 @@ export function EventCard({
   isTonight,
   attendeeCount,
   genres,
+  venueImage,
   eventId,
   onClick,
 }: EventCardProps): React.JSX.Element {
   const navigate = useNavigate();
   const accent = getGenreAccent(genres);
-  const displayImage = getArtistDisplayImage(artistImage, genres, artistName);
+  const displayImage = getArtistDisplayImage(artistImage, genres, artistName, venueImage);
 
   const dateStr = date.toLocaleDateString('en-US', {
     weekday: 'short',

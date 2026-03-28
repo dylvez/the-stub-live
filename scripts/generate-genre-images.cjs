@@ -2,7 +2,8 @@ const https = require('https');
 const fs = require('fs');
 const path = require('path');
 
-const API_KEY = 'REDACTED_KEY';
+const API_KEY = process.env.GEMINI_API_KEY;
+if (!API_KEY) { console.error('Set GEMINI_API_KEY env var before running.'); process.exit(1); }
 const MODEL = 'gemini-2.5-flash-image';
 const ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`;
 const ASSETS_DIR = path.join(__dirname, '..', 'public', 'images');
@@ -37,6 +38,42 @@ rich warm wood tones, chandeliers creating bokeh, refined intimate atmosphere. N
     prompt: `${STYLE} Latin music concert scene: warm tropical stage lighting in orange and red,
 percussion instruments silhouetted, dancing crowd energy,
 festive colorful atmosphere with warm golden glow, outdoor stage feel. NO text.`,
+  },
+  {
+    filename: 'genre-electronic.png',
+    prompt: `${STYLE} Electronic / EDM concert scene: vivid neon blue and purple laser beams cutting through thick fog,
+DJ booth silhouette with LED screens behind, dense crowd with raised hands,
+electric blue and deep violet color palette, futuristic pulsating atmosphere. NO text.`,
+  },
+  {
+    filename: 'genre-folk.png',
+    prompt: `${STYLE} Intimate folk / acoustic concert in a warm small venue: single performer silhouette on stage
+with acoustic guitar, warm golden amber spotlight, less fog than other genres,
+cozy intimate feel, earthy warm amber tones, wooden stage elements visible, small close crowd. NO text.`,
+  },
+  {
+    filename: 'genre-hiphop.png',
+    prompt: `${STYLE} Hip-hop / rap concert scene: solo performer silhouette on stage with microphone,
+commanding presence, bold dramatic lighting with amber gold and deep red tones,
+heavy atmospheric haze, crowd with raised hands and phones, high energy urban concert feel. NO text.`,
+  },
+  {
+    filename: 'genre-jazz.png',
+    prompt: `${STYLE} Jazz club performance scene: intimate stage with silhouettes of musicians,
+saxophone player and upright bass visible, moody blue and cyan stage lighting with warm accent spots,
+smoky atmospheric haze, classic jazz club feel, sophisticated moody atmosphere. NO text.`,
+  },
+  {
+    filename: 'genre-punk.png',
+    prompt: `${STYLE} Punk rock concert in a small gritty venue: raw energy, performer silhouette leaning
+into the crowd from a low stage, harsh red and white stage lights, intense aggressive lighting,
+crowd pressed close to stage, harsh red and stark white with deep black shadows, gritty underground feel. NO text.`,
+  },
+  {
+    filename: 'genre-rock.png',
+    prompt: `${STYLE} Rock concert on a medium stage: band silhouettes with guitarist raising guitar dramatically,
+drummer behind, classic rock concert lighting with red and amber tones, theatrical fog machines,
+energetic crowd with fists raised, fiery red and warm amber tones, classic rock energy. NO text.`,
   },
 ];
 
