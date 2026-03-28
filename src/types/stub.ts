@@ -1,6 +1,7 @@
 import type { Timestamp } from 'firebase/firestore';
 
 export type StubVisibility = 'public' | 'friends' | 'private';
+export type StubStatus = 'going' | 'attended';
 export type ReactionType = '🔥' | '🎶' | '💀' | '🤘' | '❤️' | '😭';
 export type SetlistSource = 'setlistfm' | 'user' | 'ai_assisted';
 
@@ -17,6 +18,10 @@ export interface SetlistSong {
   notes?: string;
   isCover: boolean;
   originalArtist?: string;
+  // Genius enrichment (populated async after Stub save)
+  geniusId?: number;
+  geniusSongDescription?: string;
+  geniusUrl?: string;
 }
 
 export interface StubSetlist {
@@ -67,6 +72,7 @@ export interface StubData {
   setlist?: StubSetlist;
   narrative?: StubNarrative;
   photos: StubPhoto[];
+  status?: StubStatus;
   visibility: StubVisibility;
   reactions: StubReaction[];
   comments: StubComment[];

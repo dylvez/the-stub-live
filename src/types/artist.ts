@@ -15,6 +15,8 @@ export interface ArtistExternalIds {
   bandcampUrl?: string;
   websiteUrl?: string;
   jambaseId?: string;
+  discogsId?: string;
+  geniusId?: string;
 }
 
 export interface AiBriefing {

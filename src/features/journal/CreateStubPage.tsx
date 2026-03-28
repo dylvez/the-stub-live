@@ -15,10 +15,12 @@ import { useAuth } from '@/contexts/AuthContext';
 import { db } from '@/services/firebase/config';
 import { uploadStubPhotos, MAX_PHOTOS, MAX_FILE_SIZE, ALLOWED_TYPES } from '@/services/firebase/storage';
 import { searchSetlists } from '@/services/api/setlistfm';
+import { enrichSetlistWithGenius } from '@/services/api/enrichSetlist';
+import { isEventInFuture } from '@/utils/formatDate';
 import type { EventData, ArtistData, VenueData } from '@/types';
 import type { SetlistSong } from '@/types';
 
-type Step = 'identify' | 'capture' | 'setlist' | 'story' | 'publish';
+type Step = 'identify' | 'capture' | 'going' | 'setlist' | 'story' | 'publish';
 type ResultCategory = 'events' | 'artists' | 'venues';
 
 interface SelectedShow {
@@ -31,13 +33,22 @@ interface PhotoItem {
   id: string;
   file: File;
   preview: string;
+  caption: string;
 }
 
-const STEPS: { key: Step; label: string; icon: typeof Search }[] = [
+type StepDef = { key: Step; label: string; icon: typeof Search };
+
+const POST_EVENT_STEPS: StepDef[] = [
   { key: 'identify', label: 'The Show', icon: Search },
   { key: 'capture', label: 'Quick Capture', icon: Zap },
   { key: 'setlist', label: 'Setlist', icon: Music },
   { key: 'story', label: 'Your Story', icon: PenTool },
+  { key: 'publish', label: 'Publish', icon: Eye },
+];
+
+const PRE_EVENT_STEPS: StepDef[] = [
+  { key: 'identify', label: 'The Show', icon: Search },
+  { key: 'going', label: "Going!", icon: Ticket },
   { key: 'publish', label: 'Publish', icon: Eye },
 ];
 
@@ -95,6 +106,9 @@ export function CreateStubPage(): React.JSX.Element {
   const [setlistfmId, setSetlistfmId] = useState<string | undefined>(undefined);
   const [setlistImporting, setSetlistImporting] = useState(false);
 
+  // Companions
+  const [companionsText, setCompanionsText] = useState('');
+
   const { user } = useAuth();
 
   // URL params — pre-populate from "Stub It" buttons
@@ -105,6 +119,20 @@ export function CreateStubPage(): React.JSX.Element {
   const [activeCategory, setActiveCategory] = useState<ResultCategory>('events');
   const { artists, venues, events, eventArtists, eventVenues, isSearching } = useSearch(query);
   const [selectedShow, setSelectedShow] = useState<SelectedShow | null>(null);
+  const [manualEntry, setManualEntry] = useState(false);
+  const [manualArtist, setManualArtist] = useState('');
+  const [manualVenue, setManualVenue] = useState('');
+  const [manualDate, setManualDate] = useState('');
+  const [manualSelectedArtist, setManualSelectedArtist] = useState<ArtistData | null>(null);
+  const [manualSelectedVenue, setManualSelectedVenue] = useState<VenueData | null>(null);
+  const [showArtistSuggestions, setShowArtistSuggestions] = useState(false);
+  const [showVenueSuggestions, setShowVenueSuggestions] = useState(false);
+  const { artists: artistSuggestions } = useSearch(manualEntry && manualArtist.length >= 2 && !manualSelectedArtist ? manualArtist : '');
+  const { venues: venueSuggestions } = useSearch(manualEntry && manualVenue.length >= 2 && !manualSelectedVenue ? manualVenue : '');
+
+  // Time-aware mode: pre-event shows streamlined flow, post-event shows full capture
+  const isPreEvent = selectedShow ? isEventInFuture(selectedShow.event.date) : false;
+  const STEPS = isPreEvent ? PRE_EVENT_STEPS : POST_EVENT_STEPS;
 
   // Auto-populate from URL params (from Stub It buttons)
   useEffect(() => {
@@ -181,6 +209,48 @@ export function CreateStubPage(): React.JSX.Element {
     });
   }
 
+  function confirmManualEntry(): void {
+    if (!manualArtist.trim() || !manualDate) return;
+    const parsedDate = new Date(manualDate + 'T20:00:00');
+
+    const artist: ArtistData = manualSelectedArtist ?? {
+      id: `manual-artist-${Date.now()}`,
+      name: manualArtist.trim(),
+      sortName: manualArtist.trim(),
+      genres: [],
+      tags: [],
+      images: { primary: '', gallery: [] },
+      externalIds: {},
+      lastUpdated: Timestamp.now(),
+    };
+
+    const venue: VenueData | undefined = manualSelectedVenue ?? (manualVenue.trim() ? {
+      id: `manual-venue-${Date.now()}`,
+      name: manualVenue.trim(),
+      address: '', city: '', state: '', lat: 0, lng: 0,
+      venueType: 'other',
+      images: { primary: '', gallery: [] },
+      externalIds: {},
+      accessibility: { wheelchairAccessible: false, assistiveListening: false },
+      stats: { totalShowsTracked: 0, topArtists: [], genreBreakdown: [] },
+      lastUpdated: Timestamp.now(),
+    } : undefined);
+
+    const fakeEvent: EventData = {
+      id: `manual-${Date.now()}`,
+      artistIds: [artist.id],
+      venueId: venue?.id ?? '',
+      date: Timestamp.fromDate(parsedDate),
+      status: 'scheduled',
+      source: 'manual',
+      externalIds: {},
+      lastUpdated: Timestamp.now(),
+    };
+
+    setSelectedShow({ event: fakeEvent, artist, venue });
+    setManualEntry(false);
+  }
+
   function toggleHighlight(h: string): void {
     setSelectedHighlights((prev) => {
       const next = new Set(prev);
@@ -198,9 +268,9 @@ export function CreateStubPage(): React.JSX.Element {
       const stubId = `stub-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
       const now = FsTimestamp.now();
 
-      // 1. Upload photos to Cloud Storage
-      const { photos: uploadedPhotos, failedCount } = photos.length > 0
-        ? await uploadStubPhotos(stubId, photos.map((p) => p.file))
+      // 1. Upload photos to Cloud Storage (post-event only)
+      const { photos: uploadedPhotos, failedCount } = !isPreEvent && photos.length > 0
+        ? await uploadStubPhotos(stubId, photos.map((p) => ({ file: p.file, caption: p.caption })))
         : { photos: [], failedCount: 0 };
 
       if (failedCount > 0) {
@@ -226,21 +296,17 @@ export function CreateStubPage(): React.JSX.Element {
         ? { body: narrative.trim(), aiPromptResponses: [] }
         : undefined;
 
-      // 4. Compose the full StubData document
-      const stubData = {
+      // 4. Compose the StubData document — branched on pre/post-event
+      const baseData = {
         id: stubId,
         userId: user.uid,
         eventId: selectedShow.event.id,
         artistIds: selectedShow.artist?.id ? [selectedShow.artist.id] : [],
+        artistName: selectedShow.artist?.name ?? 'Unknown Artist',
         venueId: selectedShow.venue?.id ?? '',
+        venueName: selectedShow.venue?.name ?? 'Unknown Venue',
+        artistImage: selectedShow.artist?.images.primary ?? '',
         date: selectedShow.event.date,
-        rating,
-        vibeRating: vibes,
-        highlights: Array.from(selectedHighlights),
-        companions: [],
-        photos: uploadedPhotos,
-        ...(setlist ? { setlist } : {}),
-        ...(narrativeData ? { narrative: narrativeData } : {}),
         visibility,
         reactions: [],
         comments: [],
@@ -250,8 +316,35 @@ export function CreateStubPage(): React.JSX.Element {
         publishedAt: now,
       };
 
+      const stubData = isPreEvent
+        ? {
+            ...baseData,
+            status: 'going' as const,
+            companions: companionsText.split(',').map((c) => c.trim()).filter(Boolean),
+            photos: [],
+            highlights: [],
+          }
+        : {
+            ...baseData,
+            status: 'attended' as const,
+            rating,
+            vibeRating: vibes,
+            highlights: Array.from(selectedHighlights),
+            companions: companionsText.split(',').map((c) => c.trim()).filter(Boolean),
+            photos: uploadedPhotos,
+            ...(setlist ? { setlist } : {}),
+            ...(narrativeData ? { narrative: narrativeData } : {}),
+          };
+
       // Save to Firestore
       await setDoc(doc(db, 'stubs', stubId), stubData);
+
+      // Fire-and-forget: enrich setlist songs with Genius metadata
+      if (setlist && setlist.songs.length > 0 && selectedShow?.artist?.name) {
+        enrichSetlistWithGenius(stubId, setlist.songs, selectedShow.artist.name).catch(() => {
+          // Best-effort — don't block navigation or show errors
+        });
+      }
 
       // Also save locally as fallback
       const existing = JSON.parse(localStorage.getItem('stub:my-stubs') ?? '[]');
@@ -286,6 +379,7 @@ export function CreateStubPage(): React.JSX.Element {
         id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
         file,
         preview: URL.createObjectURL(file),
+        caption: '',
       });
     }
 
@@ -507,31 +601,140 @@ export function CreateStubPage(): React.JSX.Element {
                 </>
               )}
 
-              <div className="mt-4 space-y-2">
-                <Card hover>
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-lg bg-stub-border flex items-center justify-center text-stub-muted">
-                      <Calendar className="w-5 h-5" />
+              {/* Manual entry form */}
+              {manualEntry ? (
+                <div className="mt-4">
+                  <Card>
+                    <h3 className="font-display font-bold text-stub-text text-sm mb-3">Enter Show Details</h3>
+                    <div className="space-y-3">
+                      <div className="relative">
+                        <label className="text-[10px] text-stub-muted uppercase tracking-wider block mb-1">Artist *</label>
+                        <input
+                          type="text"
+                          value={manualArtist}
+                          onChange={(e) => {
+                            setManualArtist(e.target.value);
+                            setManualSelectedArtist(null);
+                            setShowArtistSuggestions(true);
+                          }}
+                          onFocus={() => setShowArtistSuggestions(true)}
+                          onBlur={() => setTimeout(() => setShowArtistSuggestions(false), 200)}
+                          placeholder="Who did you see?"
+                          className="w-full bg-stub-bg border border-stub-border rounded-lg px-3 py-2 text-sm text-stub-text
+                            placeholder:text-stub-muted/50 focus:outline-none focus:border-stub-amber/50 transition-colors"
+                          autoFocus
+                        />
+                        {showArtistSuggestions && artistSuggestions.length > 0 && !manualSelectedArtist && (
+                          <div className="absolute left-0 right-0 top-full mt-1 z-20 bg-stub-surface border border-stub-border rounded-lg shadow-xl max-h-40 overflow-y-auto">
+                            {artistSuggestions.slice(0, 5).map((a) => (
+                              <button
+                                key={a.id}
+                                onMouseDown={(e) => e.preventDefault()}
+                                onClick={() => {
+                                  setManualArtist(a.name);
+                                  setManualSelectedArtist(a);
+                                  setShowArtistSuggestions(false);
+                                }}
+                                className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm text-stub-text hover:bg-stub-bg transition-colors"
+                              >
+                                <div className="w-7 h-7 rounded-md overflow-hidden shrink-0 bg-stub-border">
+                                  {a.images.primary ? (
+                                    <img src={a.images.primary} alt="" className="w-full h-full object-cover" />
+                                  ) : (
+                                    <div className="w-full h-full bg-gradient-to-br from-stub-amber/20 to-stub-coral/20" />
+                                  )}
+                                </div>
+                                <div className="truncate">{a.name}</div>
+                                {a.genres.length > 0 && (
+                                  <span className="text-[10px] text-stub-muted ml-auto shrink-0">{a.genres[0]}</span>
+                                )}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      <div className="relative">
+                        <label className="text-[10px] text-stub-muted uppercase tracking-wider block mb-1">Venue</label>
+                        <input
+                          type="text"
+                          value={manualVenue}
+                          onChange={(e) => {
+                            setManualVenue(e.target.value);
+                            setManualSelectedVenue(null);
+                            setShowVenueSuggestions(true);
+                          }}
+                          onFocus={() => setShowVenueSuggestions(true)}
+                          onBlur={() => setTimeout(() => setShowVenueSuggestions(false), 200)}
+                          placeholder="Where was the show?"
+                          className="w-full bg-stub-bg border border-stub-border rounded-lg px-3 py-2 text-sm text-stub-text
+                            placeholder:text-stub-muted/50 focus:outline-none focus:border-stub-amber/50 transition-colors"
+                        />
+                        {showVenueSuggestions && venueSuggestions.length > 0 && !manualSelectedVenue && (
+                          <div className="absolute left-0 right-0 top-full mt-1 z-20 bg-stub-surface border border-stub-border rounded-lg shadow-xl max-h-40 overflow-y-auto">
+                            {venueSuggestions.slice(0, 5).map((v) => (
+                              <button
+                                key={v.id}
+                                onMouseDown={(e) => e.preventDefault()}
+                                onClick={() => {
+                                  setManualVenue(v.name);
+                                  setManualSelectedVenue(v);
+                                  setShowVenueSuggestions(false);
+                                }}
+                                className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm text-stub-text hover:bg-stub-bg transition-colors"
+                              >
+                                <MapPin className="w-4 h-4 text-stub-muted shrink-0" />
+                                <div className="truncate">{v.name}</div>
+                                <span className="text-[10px] text-stub-muted ml-auto shrink-0">{v.city}</span>
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      <div>
+                        <label className="text-[10px] text-stub-muted uppercase tracking-wider block mb-1">Date *</label>
+                        <input
+                          type="date"
+                          value={manualDate}
+                          onChange={(e) => setManualDate(e.target.value)}
+                          className="w-full bg-stub-bg border border-stub-border rounded-lg px-3 py-2 text-sm text-stub-text
+                            focus:outline-none focus:border-stub-amber/50 transition-colors
+                            [color-scheme:dark]"
+                        />
+                      </div>
+                      <div className="flex gap-2 pt-1">
+                        <button
+                          onClick={() => setManualEntry(false)}
+                          className="flex-1 px-3 py-2 rounded-lg border border-stub-border text-sm text-stub-muted hover:text-stub-text transition-colors"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={confirmManualEntry}
+                          disabled={!manualArtist.trim() || !manualDate}
+                          className="flex-1 px-3 py-2 rounded-lg bg-stub-amber text-stub-bg text-sm font-semibold
+                            hover:bg-stub-amber-dim transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                        >
+                          Continue
+                        </button>
+                      </div>
                     </div>
-                    <div>
-                      <div className="text-sm font-semibold text-stub-text">Enter details manually</div>
-                      <div className="text-xs text-stub-muted">Artist, venue, and date</div>
+                  </Card>
+                </div>
+              ) : !selectedShow && (
+                <div className="mt-4 space-y-2">
+                  <Card hover onClick={() => setManualEntry(true)} className="cursor-pointer">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-lg bg-stub-border flex items-center justify-center text-stub-muted">
+                        <Calendar className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <div className="text-sm font-semibold text-stub-text">Enter details manually</div>
+                        <div className="text-xs text-stub-muted">Artist, venue, and date</div>
+                      </div>
                     </div>
-                  </div>
-                </Card>
-
-                <Card hover>
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-lg bg-stub-coral/20 flex items-center justify-center text-stub-coral">
-                      <Zap className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <div className="text-sm font-semibold text-stub-text">I&apos;m at a show right now</div>
-                      <div className="text-xs text-stub-muted">Quick-start mode</div>
-                    </div>
-                  </div>
-                </Card>
-              </div>
+                  </Card>
+                </div>
+              )}
             </div>
           )}
 
@@ -607,18 +810,30 @@ export function CreateStubPage(): React.JSX.Element {
 
                 {/* Photo grid */}
                 {photos.length > 0 && (
-                  <div className="grid grid-cols-3 gap-2 mb-3">
+                  <div className="space-y-3 mb-3">
                     {photos.map((photo) => (
-                      <div key={photo.id} className="relative aspect-square rounded-lg overflow-hidden bg-stub-border group">
-                        <img src={photo.preview} alt="" className="w-full h-full object-cover" />
-                        <button
-                          onClick={() => removePhoto(photo.id)}
-                          aria-label="Remove photo"
-                          className="absolute top-1 right-1 p-0.5 bg-stub-bg/80 rounded-full text-stub-muted hover:text-stub-text
-                            opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                          <X className="w-3.5 h-3.5" />
-                        </button>
+                      <div key={photo.id} className="flex gap-3 items-start">
+                        <div className="relative w-20 h-20 rounded-lg overflow-hidden bg-stub-border flex-shrink-0 group">
+                          <img src={photo.preview} alt="" className="w-full h-full object-cover" />
+                          <button
+                            onClick={() => removePhoto(photo.id)}
+                            aria-label="Remove photo"
+                            className="absolute top-0.5 right-0.5 p-0.5 bg-stub-bg/80 rounded-full text-stub-muted hover:text-stub-text
+                              opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
+                        <input
+                          type="text"
+                          value={photo.caption}
+                          onChange={(e) => setPhotos((prev) => prev.map((p) =>
+                            p.id === photo.id ? { ...p, caption: e.target.value } : p
+                          ))}
+                          placeholder="Add a caption..."
+                          className="flex-1 bg-stub-surface border border-stub-border rounded-lg px-3 py-2 text-sm text-stub-text
+                            placeholder:text-stub-muted/50 focus:outline-none focus:border-stub-amber/50 transition-colors"
+                        />
                       </div>
                     ))}
                   </div>
@@ -653,7 +868,12 @@ export function CreateStubPage(): React.JSX.Element {
                 <p className="text-sm text-stub-text mb-2 flex items-center gap-1.5">
                   <Users className="w-4 h-4" /> Who were you with?
                 </p>
-                <Input placeholder="@tag friends..." />
+                <Input
+                  placeholder="Names or handles, separated by commas..."
+                  value={companionsText}
+                  onChange={(e) => setCompanionsText(e.target.value)}
+                />
+                <p className="text-[10px] text-stub-muted mt-1">e.g. Sarah, @mikejones, my brother</p>
               </div>
             </div>
           )}
@@ -806,7 +1026,58 @@ export function CreateStubPage(): React.JSX.Element {
             </div>
           )}
 
-          {/* Step 5: Publish */}
+          {/* Pre-event: Going step */}
+          {currentStep === 'going' && (
+            <div>
+              <h2 className="font-display font-bold text-stub-text text-xl mb-1">You're Going! 🎶</h2>
+              <p className="text-sm text-stub-muted mb-6">Claim your spot and let people know.</p>
+
+              <div className="mb-6">
+                <p className="text-sm text-stub-text mb-2 flex items-center gap-1.5">
+                  <Users className="w-4 h-4" /> Who are you going with?
+                </p>
+                <Input
+                  placeholder="Names or handles, separated by commas..."
+                  value={companionsText}
+                  onChange={(e) => setCompanionsText(e.target.value)}
+                />
+                <p className="text-[10px] text-stub-muted mt-1">e.g. Sarah, @mikejones, my brother</p>
+              </div>
+
+              <div>
+                <p className="text-sm text-stub-text mb-2 flex items-center gap-1.5">
+                  <Eye className="w-4 h-4" /> Who can see this?
+                </p>
+                <div className="space-y-2">
+                  {([
+                    { value: 'public' as const, label: 'Public', desc: 'Anyone can see this Stub' },
+                    { value: 'friends' as const, label: 'Friends Only', desc: 'Only your followers' },
+                    { value: 'private' as const, label: 'Private', desc: 'Just for you' },
+                  ]).map(({ value, label, desc }) => (
+                    <button
+                      key={value}
+                      onClick={() => setVisibility(value)}
+                      className={`w-full text-left p-3 rounded-lg transition-colors
+                        ${visibility === value
+                          ? 'bg-stub-amber/10 border-2 border-stub-amber'
+                          : 'bg-stub-surface border border-stub-border hover:border-stub-amber/50'
+                        }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="text-sm font-semibold text-stub-text">{label}</div>
+                          <div className="text-xs text-stub-muted">{desc}</div>
+                        </div>
+                        {visibility === value && <Check className="w-4 h-4 text-stub-amber" />}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Publish */}
           {currentStep === 'publish' && (
             <div>
               <h2 className="font-display font-bold text-stub-text text-xl mb-1">Ready to publish?</h2>
@@ -865,7 +1136,7 @@ export function CreateStubPage(): React.JSX.Element {
                 onClick={handlePublish}
                 disabled={isPublishing}
               >
-                {isPublishing ? 'Publishing...' : 'Publish Stub'}
+                {isPublishing ? 'Publishing...' : isPreEvent ? "I'm Going!" : 'Publish Stub'}
               </Button>
             </div>
           )}

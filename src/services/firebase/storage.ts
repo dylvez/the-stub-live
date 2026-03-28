@@ -67,26 +67,32 @@ export async function compressImage(file: File): Promise<Blob> {
  * Upload an array of files to Cloud Storage under stubs/{stubId}/.
  * Returns a list of StubPhoto objects and a count of any failures.
  */
+export interface PhotoInput {
+  file: File;
+  caption?: string;
+}
+
 export async function uploadStubPhotos(
   stubId: string,
-  files: File[]
+  inputs: PhotoInput[]
 ): Promise<UploadResult> {
   const photos: StubPhoto[] = [];
   let failedCount = 0;
 
-  for (const file of files) {
+  for (const input of inputs) {
     try {
       const photoId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
       const storagePath = `stubs/${stubId}/${photoId}.jpg`;
       const storageRef = ref(storage, storagePath);
 
-      const compressed = await compressImage(file);
+      const compressed = await compressImage(input.file);
       await uploadBytes(storageRef, compressed, { contentType: 'image/jpeg' });
       const url = await getDownloadURL(storageRef);
 
       photos.push({
         url,
         storageRef: storagePath,
+        caption: input.caption?.trim() || undefined,
         timestamp: Timestamp.now(),
       });
     } catch (err) {

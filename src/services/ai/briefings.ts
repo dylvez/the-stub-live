@@ -13,6 +13,13 @@ export interface BriefingParams {
   lastfmBio?: string;
   topTrackNames?: string[];
   listenerCount?: number;
+  // Discogs enrichment
+  discogsBio?: string;
+  discogsStyles?: string[];
+  discographyHighlights?: string[];
+  // Genius enrichment
+  geniusBio?: string;
+  geniusSongDescriptions?: string[];
 }
 
 interface BriefingResponse {

@@ -1,0 +1,143 @@
+@import "tailwindcss";
+
+@theme {
+  /* Moody Concert Hall palette */
+  --color-stub-bg: #0A0A12;
+  --color-stub-surface: #161324;
+  --color-stub-surface-hover: #1E1A30;
+  --color-stub-amber: #E8A838;
+  --color-stub-amber-dim: #B8852C;
+  --color-stub-coral: #FF4F6D;
+  --color-stub-cyan: #4FC4FF;
+  --color-stub-violet: #7B68EE;
+  --color-stub-green: #2ECC71;
+  --color-stub-text: #EEEAF0;
+  --color-stub-muted: #7A7688;
+  --color-stub-border: #2A2730;
+  --color-stub-border-light: #3A3740;
+
+  /* Typography */
+  --font-display: 'Outfit', system-ui, sans-serif;
+  --font-body: 'DM Sans', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'IBM Plex Mono', monospace;
+}
+
+body {
+  font-family: var(--font-body);
+  margin: 0;
+}
+
+#root {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-stub-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-stub-border-light);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-stub-muted);
+}
+
+.paper-grain {
+  position: relative;
+}
+
+.paper-grain::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+.torn-edge-right {
+  clip-path: polygon(
+    0% 0%,
+    calc(100% - 8px) 0%,
+    100% 2%,
+    calc(100% - 3px) 4%,
+    100% 6%,
+    calc(100% - 5px) 8%,
+    100% 10%,
+    calc(100% - 2px) 12%,
+    100% 14%,
+    calc(100% - 6px) 16%,
+    100% 18%,
+    calc(100% - 3px) 20%,
+    100% 22%,
+    calc(100% - 4px) 24%,
+    100% 26%,
+    calc(100% - 7px) 28%,
+    100% 30%,
+    calc(100% - 2px) 32%,
+    100% 34%,
+    calc(100% - 5px) 36%,
+    100% 38%,
+    calc(100% - 3px) 40%,
+    100% 42%,
+    calc(100% - 6px) 44%,
+    100% 46%,
+    calc(100% - 4px) 48%,
+    100% 50%,
+    calc(100% - 2px) 52%,
+    100% 54%,
+    calc(100% - 7px) 56%,
+    100% 58%,
+    calc(100% - 3px) 60%,
+    100% 62%,
+    calc(100% - 5px) 64%,
+    100% 66%,
+    calc(100% - 4px) 68%,
+    100% 70%,
+    calc(100% - 6px) 72%,
+    100% 74%,
+    calc(100% - 2px) 76%,
+    100% 78%,
+    calc(100% - 5px) 80%,
+    100% 82%,
+    calc(100% - 3px) 84%,
+    100% 86%,
+    calc(100% - 7px) 88%,
+    100% 90%,
+    calc(100% - 4px) 92%,
+    100% 94%,
+    calc(100% - 6px) 96%,
+    100% 98%,
+    calc(100% - 3px) 100%,
+    0% 100%
+  );
+}
+
+.perf-edge {
+  border-right: 2px dashed var(--color-stub-border-light);
+}
+
+.glow-amber {
+  box-shadow: 0 0 20px rgba(232, 168, 56, 0.15), 0 0 40px rgba(232, 168, 56, 0.05);
+}
+
+.glow-coral {
+  box-shadow: 0 0 20px rgba(255, 79, 109, 0.15), 0 0 40px rgba(255, 79, 109, 0.05);
+}
+
+.glow-cyan {
+  box-shadow: 0 0 20px rgba(79, 196, 255, 0.15), 0 0 40px rgba(79, 196, 255, 0.05);
+}
+
+.glow-violet {
+  box-shadow: 0 0 20px rgba(123, 104, 238, 0.15), 0 0 40px rgba(123, 104, 238, 0.05);
+}

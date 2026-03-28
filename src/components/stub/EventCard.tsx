@@ -1,0 +1,227 @@
+import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { MapPin, Calendar, Clock, ExternalLink, Bookmark, Users, PenTool } from 'lucide-react';
+import { Badge } from '@/components/ui';
+import { getArtistDisplayImage } from '@/utils/artistImage';
+
+/** Map genre keywords to accent colors for visual variety */
+function getGenreAccent(genres?: string[]): { border: string; glow: string; badge: string; text: string; bg: string } {
+  if (!genres || genres.length === 0) return ACCENT_MAP.default;
+  const g = genres[0].toLowerCase();
+  if (g.includes('rock') || g.includes('metal') || g.includes('punk') || g.includes('alternative')) return ACCENT_MAP.rock;
+  if (g.includes('jazz') || g.includes('blues') || g.includes('soul')) return ACCENT_MAP.jazz;
+  if (g.includes('electronic') || g.includes('dance') || g.includes('edm') || g.includes('house')) return ACCENT_MAP.electronic;
+  if (g.includes('hip') || g.includes('rap') || g.includes('r&b')) return ACCENT_MAP.hiphop;
+  if (g.includes('country') || g.includes('folk') || g.includes('americana')) return ACCENT_MAP.folk;
+  if (g.includes('pop')) return ACCENT_MAP.pop;
+  if (g.includes('classical') || g.includes('orchestr')) return ACCENT_MAP.classical;
+  return ACCENT_MAP.default;
+}
+
+const ACCENT_MAP = {
+  rock:       { border: 'border-stub-coral/30', glow: 'hover:border-stub-coral/50', badge: 'bg-stub-coral/15 text-stub-coral', text: 'text-stub-coral', bg: 'from-stub-coral/5 to-transparent' },
+  jazz:       { border: 'border-stub-cyan/30', glow: 'hover:border-stub-cyan/50', badge: 'bg-stub-cyan/15 text-stub-cyan', text: 'text-stub-cyan', bg: 'from-stub-cyan/5 to-transparent' },
+  electronic: { border: 'border-stub-violet/30', glow: 'hover:border-stub-violet/50', badge: 'bg-stub-violet/15 text-stub-violet', text: 'text-stub-violet', bg: 'from-stub-violet/5 to-transparent' },
+  hiphop:     { border: 'border-stub-amber/30', glow: 'hover:border-stub-amber/50', badge: 'bg-stub-amber/15 text-stub-amber', text: 'text-stub-amber', bg: 'from-stub-amber/5 to-transparent' },
+  folk:       { border: 'border-stub-green/30', glow: 'hover:border-stub-green/50', badge: 'bg-stub-green/15 text-stub-green', text: 'text-stub-green', bg: 'from-stub-green/5 to-transparent' },
+  pop:        { border: 'border-stub-coral/30', glow: 'hover:border-stub-coral/50', badge: 'bg-stub-coral/15 text-stub-coral', text: 'text-stub-coral', bg: 'from-stub-coral/5 to-transparent' },
+  classical:  { border: 'border-stub-cyan/30', glow: 'hover:border-stub-cyan/50', badge: 'bg-stub-cyan/15 text-stub-cyan', text: 'text-stub-cyan', bg: 'from-stub-cyan/5 to-transparent' },
+  default:    { border: 'border-stub-border', glow: 'hover:border-stub-border-light', badge: 'bg-stub-muted/15 text-stub-muted', text: 'text-stub-amber', bg: 'from-transparent to-transparent' },
+};
+
+interface EventCardProps {
+  artistName: string;
+  artistImage?: string;
+  /** Names of supporting acts (shown as "w/ Act1, Act2" below headliner) */
+  supportActs?: string[];
+  venueName: string;
+  venueNeighborhood?: string;
+  date: Date;
+  doorsTime?: Date;
+  priceMin?: number;
+  priceMax?: number;
+  matchScore?: number;
+  ticketUrl?: string;
+  isTonight?: boolean;
+  attendeeCount?: number;
+  genres?: string[];
+  eventId?: string;
+  onClick?: () => void;
+}
+
+export function EventCard({
+  artistName,
+  artistImage,
+  supportActs,
+  venueName,
+  venueNeighborhood,
+  date,
+  doorsTime,
+  priceMin,
+  priceMax,
+  matchScore,
+  ticketUrl,
+  isTonight,
+  attendeeCount,
+  genres,
+  eventId,
+  onClick,
+}: EventCardProps): React.JSX.Element {
+  const navigate = useNavigate();
+  const accent = getGenreAccent(genres);
+  const displayImage = getArtistDisplayImage(artistImage, genres, artistName);
+
+  const dateStr = date.toLocaleDateString('en-US', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+  });
+
+  const timeStr = doorsTime
+    ? doorsTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+    : null;
+
+  function handleStubIt(e: React.MouseEvent): void {
+    e.stopPropagation();
+    const params = new URLSearchParams();
+    if (eventId) params.set('eventId', eventId);
+    params.set('artist', artistName);
+    params.set('venue', venueName);
+    params.set('date', date.toISOString());
+    if (artistImage) params.set('artistImage', artistImage);
+    navigate(`/create?${params.toString()}`);
+  }
+
+  return (
+    <motion.div
+      whileHover={{ y: -2 }}
+      whileTap={{ scale: 0.98 }}
+      onClick={onClick}
+      className={`bg-gradient-to-r ${accent.bg} bg-stub-surface rounded-xl ${accent.border} overflow-hidden cursor-pointer
+        ${accent.glow} transition-all duration-300 paper-grain group`}
+    >
+      <div className="flex">
+        {/* Artist image */}
+        <div className="w-28 sm:w-36 relative shrink-0">
+          <img
+            src={displayImage.url}
+            alt={artistName}
+            className={`absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105${
+              displayImage.isFallback ? ' opacity-60' : ''
+            }`}
+          />
+          {displayImage.isFallback && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className={`text-3xl font-display font-bold ${accent.text} opacity-60 drop-shadow-lg`}>
+                {artistName.charAt(0)}
+              </span>
+            </div>
+          )}
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent to-stub-surface/60" />
+
+          {/* Match score */}
+          {matchScore !== undefined && matchScore > 0 && (
+            <div className="absolute top-2 left-2 bg-stub-bg/80 backdrop-blur-sm rounded-full px-2 py-0.5">
+              <span className="text-[11px] font-mono font-bold text-stub-cyan">{matchScore}%</span>
+            </div>
+          )}
+        </div>
+
+        {/* Event info */}
+        <div className="flex-1 p-3 sm:p-4 flex flex-col justify-between">
+          <div>
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                {isTonight && <Badge variant="coral" className="mb-1.5">TONIGHT</Badge>}
+                <h3 className="font-display font-bold text-stub-text text-base leading-tight">
+                  {artistName}
+                </h3>
+                {supportActs && supportActs.length > 0 && (
+                  <p className="text-[11px] text-stub-muted mt-0.5 truncate">
+                    w/ {supportActs.slice(0, 3).join(', ')}
+                    {supportActs.length > 3 ? ` +${supportActs.length - 3} more` : ''}
+                  </p>
+                )}
+              </div>
+              <button
+                className="p-1 text-stub-muted hover:text-stub-text transition-colors shrink-0"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <Bookmark className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="flex items-center gap-1 mt-1 text-stub-muted text-xs">
+              <MapPin className="w-3 h-3 shrink-0" />
+              <span className="truncate">{venueName}{venueNeighborhood ? ` · ${venueNeighborhood}` : ''}</span>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between mt-3">
+            <div className="flex items-center gap-3 text-xs text-stub-muted">
+              <span className="flex items-center gap-1 font-mono">
+                <Calendar className="w-3 h-3" />
+                {dateStr}
+              </span>
+              {timeStr && (
+                <span className="flex items-center gap-1 font-mono">
+                  <Clock className="w-3 h-3" />
+                  {timeStr}
+                </span>
+              )}
+            </div>
+
+            <div className="flex items-center gap-2">
+              {priceMin !== undefined && (
+                <span className="text-xs font-mono text-stub-muted">
+                  ${priceMin}{priceMax && priceMax !== priceMin ? `–$${priceMax}` : ''}
+                </span>
+              )}
+              {attendeeCount !== undefined && attendeeCount > 0 && (
+                <span className="flex items-center gap-0.5 text-xs text-stub-muted">
+                  <Users className="w-3 h-3" />
+                  {attendeeCount}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Genres — always coral */}
+          {genres && genres.length > 0 && (
+            <div className="flex flex-wrap gap-1 mt-2">
+              {genres.slice(0, 3).map((g) => (
+                <span key={g} className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-stub-coral/15 text-stub-coral">
+                  {g}
+                </span>
+              ))}
+            </div>
+          )}
+
+          {/* Actions row */}
+          <div className="flex items-center gap-3 mt-2">
+            {ticketUrl && (
+              <a
+                href={ticketUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="inline-flex items-center gap-1 text-xs text-stub-amber hover:text-stub-amber-dim transition-colors"
+              >
+                <ExternalLink className="w-3 h-3" />
+                Get Tickets
+              </a>
+            )}
+            <button
+              onClick={handleStubIt}
+              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium
+                bg-stub-violet/10 text-stub-violet hover:bg-stub-violet/20 transition-colors"
+            >
+              <PenTool className="w-3 h-3" />
+              Stub It
+            </button>
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+}

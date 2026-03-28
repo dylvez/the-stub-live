@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import {
-  ArrowLeft, ExternalLink, Share2, Heart, Video, Play,
-  Calendar, MapPin, ListMusic, PenTool, Clock, Loader2,
+  ArrowLeft, ExternalLink, Share2, Video, Play,
+  Calendar, MapPin, ListMusic, PenTool, Loader2,
 } from 'lucide-react';
 import { Card, Badge, Button } from '@/components/ui';
 import { useArtist } from '@/hooks/useArtist';
@@ -14,14 +15,14 @@ import { formatSetlistDate } from '@/utils/setlistToEvent';
 import { searchLivePerformances, type YouTubeVideo } from '@/services/api/youtube';
 import { getArtistSetlists, type SetlistResult } from '@/services/api/setlistfm';
 
-type MediaTab = 'watch' | 'setlists';
+type ArtistTab = 'shows' | 'watch' | 'setlists';
 
 export function ArtistPage(): React.JSX.Element {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { artist, lastfmInfo, mbArtist, isLoading: artistLoading } = useArtist(id);
   const { events: allEvents, venues } = useEvents({ artistId: id });
-  const [activeTab, setActiveTab] = useState<MediaTab>('watch');
+  const [activeTab, setActiveTab] = useState<ArtistTab>('shows');
   const [videos, setVideos] = useState<YouTubeVideo[]>([]);
   const [setlists, setSetlists] = useState<SetlistResult[]>([]);
   const [briefing, setBriefing] = useState<AiBriefing | null>(artist?.aiBriefing ?? null);
@@ -86,6 +87,16 @@ export function ArtistPage(): React.JSX.Element {
 
   return (
     <div className="pb-8">
+      <Helmet>
+        <title>{`${artist.name} — The Stub Live`}</title>
+        <meta property="og:title" content={artist.name} />
+        <meta property="og:description" content={artist.genres.length > 0 ? artist.genres.join(', ') : 'Artist on The Stub Live'} />
+        <meta property="og:type" content="profile" />
+        <meta property="og:url" content={window.location.href} />
+        <meta property="og:site_name" content="The Stub Live" />
+        {artist.images.primary && <meta property="og:image" content={artist.images.primary} />}
+        <meta name="twitter:card" content={artist.images.primary ? 'summary_large_image' : 'summary'} />
+      </Helmet>
       {/* Hero */}
       <div className="relative h-64 sm:h-80 overflow-hidden">
         {artist.images.primary ? (
@@ -122,8 +133,22 @@ export function ArtistPage(): React.JSX.Element {
       <div className="px-4 -mt-2 relative z-10">
         {/* Action buttons */}
         <div className="flex gap-2 mb-6">
-          <Button variant="primary" icon={<Heart className="w-4 h-4" />}>Follow</Button>
-          <Button variant="secondary" icon={<Share2 className="w-4 h-4" />}>Share</Button>
+          <Button
+            variant="secondary"
+            icon={<Share2 className="w-4 h-4" />}
+            onClick={() => {
+              const url = window.location.href;
+              if (navigator.share) {
+                navigator.share({ title: artist.name, text: `Check out ${artist.name} on The Stub Live`, url }).catch(() => {});
+              } else {
+                navigator.clipboard.writeText(url).then(() => {
+                  // Could show toast — for now, button text feedback
+                }).catch(() => {});
+              }
+            }}
+          >
+            Share
+          </Button>
         </div>
 
         {/* Last.fm bio or AI Briefing */}
@@ -173,7 +198,13 @@ export function ArtistPage(): React.JSX.Element {
                   <span className="text-xs text-stub-muted uppercase tracking-wider">For Fans Of</span>
                   <div className="flex flex-wrap gap-1.5 mt-1">
                     {similarArtists.slice(0, 5).map((name) => (
-                      <Badge key={name} variant="cyan">{name}</Badge>
+                      <button
+                        key={name}
+                        onClick={() => navigate(`/search?q=${encodeURIComponent(name)}`)}
+                        className="cursor-pointer"
+                      >
+                        <Badge variant="cyan">{name}</Badge>
+                      </button>
                     ))}
                   </div>
                 </div>
@@ -200,17 +231,18 @@ export function ArtistPage(): React.JSX.Element {
           </motion.div>
         )}
 
-        {/* Media tabs */}
+        {/* Tabs: Upcoming Shows | Watch | Setlists */}
         <section className="mb-6">
           <div className="flex border-b border-stub-border mb-4">
             {([
+              { key: 'shows' as const, icon: Calendar, label: 'Upcoming Shows' },
               { key: 'watch' as const, icon: Video, label: 'Watch' },
               { key: 'setlists' as const, icon: ListMusic, label: 'Setlists' },
             ]).map(({ key, icon: Icon, label }) => (
               <button
                 key={key}
                 onClick={() => setActiveTab(key)}
-                className={`flex items-center gap-1.5 px-4 py-2.5 text-sm transition-colors border-b-2
+                className={`flex items-center gap-1.5 px-3 py-2.5 text-sm transition-colors border-b-2
                   ${activeTab === key
                     ? 'text-stub-amber border-stub-amber'
                     : 'text-stub-muted border-transparent hover:text-stub-text'
@@ -218,9 +250,81 @@ export function ArtistPage(): React.JSX.Element {
               >
                 <Icon className="w-4 h-4" />
                 {label}
+                {key === 'shows' && upcomingEvents.length > 0 && (
+                  <span className="text-[10px] font-mono text-stub-muted">{upcomingEvents.length}</span>
+                )}
               </button>
             ))}
           </div>
+
+          {/* Upcoming Shows tab */}
+          {activeTab === 'shows' && (
+            <div className="space-y-3">
+              {upcomingEvents.length > 0 ? (
+                upcomingEvents.map((event) => {
+                  const venue = venues.get(event.venueId);
+                  return (
+                    <Card key={event.id} hover>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="flex items-center gap-1.5 text-sm text-stub-text">
+                            <MapPin className="w-3.5 h-3.5 text-stub-muted" />
+                            {venue?.name ?? 'Unknown Venue'}
+                            {venue?.city && <span className="text-stub-muted">· {venue.city}</span>}
+                          </div>
+                          <div className="text-xs font-mono text-stub-muted mt-1">
+                            {event.date.toDate().toLocaleDateString('en-US', {
+                              weekday: 'long',
+                              month: 'long',
+                              day: 'numeric',
+                            })}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {event.priceRange && (
+                            <span className="text-xs font-mono text-stub-muted">
+                              ${event.priceRange.min}
+                              {event.priceRange.max !== event.priceRange.min && `–$${event.priceRange.max}`}
+                            </span>
+                          )}
+                          {event.ticketUrl && (
+                            <a
+                              href={event.ticketUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-stub-amber hover:text-stub-amber-dim transition-colors"
+                            >
+                              <ExternalLink className="w-4 h-4" />
+                            </a>
+                          )}
+                          <button
+                            onClick={() => {
+                              const params = new URLSearchParams();
+                              params.set('eventId', event.id);
+                              params.set('artist', artist?.name ?? '');
+                              params.set('venue', venue?.name ?? '');
+                              params.set('date', event.date.toDate().toISOString());
+                              if (artist?.images.primary) params.set('artistImage', artist.images.primary);
+                              navigate(`/create?${params.toString()}`);
+                            }}
+                            className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium
+                              bg-stub-amber/10 text-stub-amber hover:bg-stub-amber/20 transition-colors"
+                          >
+                            <PenTool className="w-3 h-3" />
+                            Stub It
+                          </button>
+                        </div>
+                      </div>
+                    </Card>
+                  );
+                })
+              ) : (
+                <div className="text-center py-6 text-stub-muted text-sm">
+                  No upcoming shows found
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Watch tab: YouTube live videos */}
           {activeTab === 'watch' && (
@@ -248,7 +352,7 @@ export function ArtistPage(): React.JSX.Element {
                 ))
               ) : (
                 <div className="text-center py-6 text-stub-muted text-sm">
-                  {videos.length === 0 ? 'Loading videos...' : 'No live videos found'}
+                  Loading videos...
                 </div>
               )}
             </div>
@@ -263,11 +367,7 @@ export function ArtistPage(): React.JSX.Element {
                     <div className="flex items-center justify-between mb-2">
                       <div>
                         <div className="text-xs font-mono text-stub-muted">
-                          {(() => {
-                            const [dd, mm, yyyy] = setlist.date.split('-');
-                            const d = new Date(`${yyyy}-${mm}-${dd}`);
-                            return isNaN(d.getTime()) ? setlist.date : d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
-                          })()}
+                          {formatSetlistDate(setlist.date)}
                         </div>
                         <div className="text-sm text-stub-text flex items-center gap-1">
                           <MapPin className="w-3 h-3" />
@@ -275,13 +375,14 @@ export function ArtistPage(): React.JSX.Element {
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Badge variant="muted">{setlist.songs.length} songs</Badge>
+                        {setlist.songs.length > 0 && (
+                          <Badge variant="muted">{setlist.songs.length} songs</Badge>
+                        )}
                         <button
                           onClick={() => {
                             const params = new URLSearchParams();
                             params.set('artist', artist?.name ?? '');
                             params.set('venue', setlist.venueName);
-                            // setlist.fm dates are DD-MM-YYYY — convert to ISO
                             const [dd, mm, yyyy] = setlist.date.split('-');
                             const isoDate = new Date(`${yyyy}-${mm}-${dd}`).toISOString();
                             params.set('date', isoDate);
@@ -321,144 +422,6 @@ export function ArtistPage(): React.JSX.Element {
             </div>
           )}
         </section>
-
-        {/* Upcoming Shows */}
-        {upcomingEvents.length > 0 && (
-          <section className="mb-6">
-            <h2 className="font-display font-bold text-stub-text text-lg mb-3 flex items-center gap-2">
-              <Calendar className="w-5 h-5 text-stub-cyan" />
-              Upcoming Shows
-              <span className="text-xs font-mono text-stub-muted ml-auto">{upcomingEvents.length}</span>
-            </h2>
-            <div className="space-y-3">
-              {upcomingEvents.map((event) => {
-                const venue = venues.get(event.venueId);
-                return (
-                  <Card key={event.id} hover>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="flex items-center gap-1.5 text-sm text-stub-text">
-                          <MapPin className="w-3.5 h-3.5 text-stub-muted" />
-                          {venue?.name ?? 'Unknown Venue'}
-                          {venue?.city && <span className="text-stub-muted">· {venue.city}</span>}
-                        </div>
-                        <div className="text-xs font-mono text-stub-muted mt-1">
-                          {event.date.toDate().toLocaleDateString('en-US', {
-                            weekday: 'long',
-                            month: 'long',
-                            day: 'numeric',
-                          })}
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {event.priceRange && (
-                          <span className="text-xs font-mono text-stub-muted">
-                            ${event.priceRange.min}
-                            {event.priceRange.max !== event.priceRange.min && `–$${event.priceRange.max}`}
-                          </span>
-                        )}
-                        {event.ticketUrl && (
-                          <a
-                            href={event.ticketUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-stub-amber hover:text-stub-amber-dim transition-colors"
-                          >
-                            <ExternalLink className="w-4 h-4" />
-                          </a>
-                        )}
-                        <button
-                          onClick={() => {
-                            const params = new URLSearchParams();
-                            params.set('eventId', event.id);
-                            params.set('artist', artist?.name ?? '');
-                            params.set('venue', venue?.name ?? '');
-                            params.set('date', event.date.toDate().toISOString());
-                            if (artist?.images.primary) params.set('artistImage', artist.images.primary);
-                            navigate(`/create?${params.toString()}`);
-                          }}
-                          className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium
-                            bg-stub-amber/10 text-stub-amber hover:bg-stub-amber/20 transition-colors"
-                        >
-                          <PenTool className="w-3 h-3" />
-                          Stub It
-                        </button>
-                      </div>
-                    </div>
-                  </Card>
-                );
-              })}
-            </div>
-          </section>
-        )}
-
-        {/* Past Shows — from setlists */}
-        {setlists.length > 0 && (
-          <section className="mb-6">
-            <h2 className="font-display font-bold text-stub-text text-lg mb-3 flex items-center gap-2">
-              <Clock className="w-5 h-5 text-stub-muted" />
-              Past Shows
-              <span className="text-xs font-mono text-stub-muted ml-auto">{setlists.length}</span>
-            </h2>
-            <div className="space-y-3">
-              {setlists.map((setlist) => (
-                <Card key={setlist.id} hover className="opacity-80 hover:opacity-100 transition-opacity">
-                  <div className="flex items-center justify-between mb-2">
-                    <div>
-                      <div className="text-xs font-mono text-stub-muted">
-                        {formatSetlistDate(setlist.date)}
-                      </div>
-                      <div className="text-sm text-stub-text flex items-center gap-1">
-                        <MapPin className="w-3 h-3" />
-                        {setlist.venueName}, {setlist.venueCity}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {setlist.songs.length > 0 && (
-                        <Badge variant="muted">{setlist.songs.length} songs</Badge>
-                      )}
-                      <Badge variant="cyan" className="text-[8px]">setlist.fm</Badge>
-                      <button
-                        onClick={() => {
-                          const params = new URLSearchParams();
-                          params.set('artist', artist?.name ?? '');
-                          params.set('venue', setlist.venueName);
-                          const [dd, mm, yyyy] = setlist.date.split('-');
-                          const isoDate = new Date(`${yyyy}-${mm}-${dd}`).toISOString();
-                          params.set('date', isoDate);
-                          if (artist?.images.primary) params.set('artistImage', artist.images.primary);
-                          navigate(`/create?${params.toString()}`);
-                        }}
-                        className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium
-                          bg-stub-amber/10 text-stub-amber hover:bg-stub-amber/20 transition-colors"
-                      >
-                        <PenTool className="w-3 h-3" />
-                        Stub It
-                      </button>
-                    </div>
-                  </div>
-                  {setlist.songs.length > 0 && (
-                    <div className="space-y-0.5">
-                      {setlist.songs.slice(0, 5).map((song, i) => (
-                        <div key={i} className="flex items-center gap-2 text-xs">
-                          <span className="w-4 text-right font-mono text-stub-muted">{i + 1}</span>
-                          <span className={`text-stub-text ${song.encore ? 'italic' : ''}`}>
-                            {song.title}
-                            {song.isCover && <span className="text-stub-muted ml-1">({song.originalArtist} cover)</span>}
-                          </span>
-                          {song.encore && <Badge variant="amber" className="text-[9px]">Encore</Badge>}
-                        </div>
-                      ))}
-                      {setlist.songs.length > 5 && (
-                        <div className="text-xs text-stub-muted pl-6">+{setlist.songs.length - 5} more</div>
-                      )}
-                    </div>
-                  )}
-                </Card>
-              ))}
-            </div>
-          </section>
-        )}
 
       </div>
     </div>
