@@ -1,6 +1,8 @@
 const { onRequest } = require("firebase-functions/v2/https");
 const { generateArtistBriefing } = require("./generateBriefing");
+const { askStub } = require("./askStub");
 exports.generateArtistBriefing = generateArtistBriefing;
+exports.askStub = askStub;
 
 /**
  * Proxy for setlist.fm API (CORS-restricted).
