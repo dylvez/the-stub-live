@@ -229,32 +229,32 @@ export function EventCard({
             </div>
           </div>
 
-          {/* Genres — always coral */}
-          {genres && genres.length > 0 && (
-            <div className="flex flex-wrap gap-1 mt-2">
-              {genres.slice(0, 3).map((g) => (
-                <span key={g} className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-stub-coral/15 text-stub-coral">
-                  {g}
-                </span>
-              ))}
+          {/* Genres + Actions row */}
+          <div className="flex items-center justify-between mt-2">
+            {genres && genres.length > 0 ? (
+              <div className="flex flex-wrap gap-1">
+                {genres.slice(0, 3).map((g) => (
+                  <span key={g} className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-stub-coral/15 text-stub-coral">
+                    {g}
+                  </span>
+                ))}
+              </div>
+            ) : <div />}
+            <div className="flex items-center gap-2 shrink-0">
+              {hasTicketUrl && ticketUrl && (
+                <a
+                  href={ticketUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  className="inline-flex items-center gap-1 text-xs text-stub-amber hover:text-stub-amber-dim transition-colors"
+                >
+                  <ExternalLink className="w-3 h-3" />
+                  {getTicketPlatformName(ticketUrl)}
+                </a>
+              )}
+              <StubItButton onClick={handleStubIt} />
             </div>
-          )}
-
-          {/* Actions row */}
-          <div className="flex items-center gap-3 mt-2">
-            {hasTicketUrl && ticketUrl && (
-              <a
-                href={ticketUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={(e) => e.stopPropagation()}
-                className="inline-flex items-center gap-1 text-xs text-stub-amber hover:text-stub-amber-dim transition-colors"
-              >
-                <ExternalLink className="w-3 h-3" />
-                {getTicketPlatformName(ticketUrl)}
-              </a>
-            )}
-            <StubItButton onClick={handleStubIt} />
           </div>
         </div>
       </div>

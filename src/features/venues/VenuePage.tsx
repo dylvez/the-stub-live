@@ -428,6 +428,7 @@ export function VenuePage(): React.JSX.Element {
                       event={event}
                       artist={allArtists.get(event.artistIds[0])}
                       onArtistClick={() => navigate(`/artist/${event.artistIds[0]}`)}
+                      onEventClick={() => navigate(`/event/${event.id}`, { state: { event, artist: allArtists.get(event.artistIds[0]), venue } })}
                       onStubIt={() => handleStubIt(event)}
                     />
                   ))}
@@ -457,6 +458,7 @@ export function VenuePage(): React.JSX.Element {
                       artist={allArtists.get(event.artistIds[0])}
                       isPast
                       onArtistClick={() => navigate(`/artist/${event.artistIds[0]}`)}
+                      onEventClick={() => navigate(`/event/${event.id}`, { state: { event, artist: allArtists.get(event.artistIds[0]), venue } })}
                       onStubIt={() => handleStubIt(event)}
                     />
                   ))}
@@ -512,12 +514,14 @@ function EventRow({
   artist,
   isPast,
   onArtistClick,
+  onEventClick,
   onStubIt,
 }: {
   event: EventData;
   artist: ArtistData | undefined;
   isPast?: boolean;
   onArtistClick: () => void;
+  onEventClick?: () => void;
   onStubIt: () => void;
 }): React.JSX.Element {
   const eventDate = event.date.toDate();
@@ -525,7 +529,7 @@ function EventRow({
   const isSetlistFm = event.source === 'setlistfm';
 
   return (
-    <Card hover className={isPast ? 'opacity-80 hover:opacity-100 transition-opacity' : ''}>
+    <Card hover className={`${isPast ? 'opacity-80 hover:opacity-100 transition-opacity' : ''} ${onEventClick ? 'cursor-pointer' : ''}`} onClick={onEventClick}>
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0 bg-stub-border">
           {artist?.images.primary ? (

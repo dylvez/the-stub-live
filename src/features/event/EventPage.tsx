@@ -229,7 +229,7 @@ export function EventPage(): React.JSX.Element {
               </Button>
             </a>
           )}
-          <StubItButton onClick={handleStubIt} size="md" />
+          <StubItButton onClick={handleStubIt} />
           <Button variant="secondary" icon={<Share2 className="w-4 h-4" />} onClick={handleShare}>
             Share
           </Button>
