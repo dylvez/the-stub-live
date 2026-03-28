@@ -109,17 +109,8 @@ export function EventCard({
           <img
             src={displayImage.url}
             alt={artistName}
-            className={`absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105${
-              displayImage.isFallback ? ' opacity-60' : ''
-            }`}
+            className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
-          {displayImage.isFallback && (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <span className={`text-3xl font-display font-bold ${accent.text} opacity-60 drop-shadow-lg`}>
-                {artistName.charAt(0)}
-              </span>
-            </div>
-          )}
           <div className="absolute inset-0 bg-gradient-to-r from-transparent to-stub-surface/60" />
 
           {/* Match score */}

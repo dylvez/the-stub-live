@@ -23,6 +23,19 @@ interface YtSearchItem {
   };
 }
 
+/** Normalize a string for fuzzy matching: lowercase, strip punctuation, collapse whitespace */
+function normalize(s: string): string {
+  return s.toLowerCase().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, ' ').trim();
+}
+
+/** Check if a video title or channel name contains the artist name */
+function matchesArtist(artistName: string, title: string, channelTitle: string): boolean {
+  const normArtist = normalize(artistName);
+  const normTitle = normalize(title);
+  const normChannel = normalize(channelTitle);
+  return normTitle.includes(normArtist) || normChannel.includes(normArtist);
+}
+
 export async function searchLivePerformances(artistName: string, limit = 5): Promise<YouTubeVideo[]> {
   if (!isYoutubeConfigured) return [];
 
@@ -30,11 +43,12 @@ export async function searchLivePerformances(artistName: string, limit = 5): Pro
   const cached = cacheGet<YouTubeVideo[]>(cacheKey, true);
   if (cached) return cached;
 
+  // Use quoted artist name for exact match, request extra results to allow filtering
   const params = new URLSearchParams({
     part: 'snippet',
-    q: `${artistName} live performance`,
+    q: `"${artistName}" live`,
     type: 'video',
-    maxResults: String(limit),
+    maxResults: String(limit * 3),
     order: 'relevance',
     videoCategoryId: '10', // Music
     key: apiKeys.youtube!,
@@ -46,13 +60,17 @@ export async function searchLivePerformances(artistName: string, limit = 5): Pro
 
   if (!data?.items) return [];
 
-  const videos: YouTubeVideo[] = data.items.map((item) => ({
-    id: item.id.videoId,
-    title: item.snippet.title,
-    thumbnail: item.snippet.thumbnails.high?.url ?? item.snippet.thumbnails.medium?.url ?? item.snippet.thumbnails.default?.url ?? '',
-    channelTitle: item.snippet.channelTitle,
-    publishedAt: item.snippet.publishedAt,
-  }));
+  // Filter to only videos that mention the artist in the title or channel name
+  const videos: YouTubeVideo[] = data.items
+    .filter((item) => matchesArtist(artistName, item.snippet.title, item.snippet.channelTitle))
+    .slice(0, limit)
+    .map((item) => ({
+      id: item.id.videoId,
+      title: item.snippet.title,
+      thumbnail: item.snippet.thumbnails.high?.url ?? item.snippet.thumbnails.medium?.url ?? item.snippet.thumbnails.default?.url ?? '',
+      channelTitle: item.snippet.channelTitle,
+      publishedAt: item.snippet.publishedAt,
+    }));
 
   cacheSet(cacheKey, videos, CacheTTL.YOUTUBE, true);
   return videos;
