@@ -435,7 +435,7 @@ export function ArtistPage(): React.JSX.Element {
                     </div>
                     <div className="flex items-center justify-end mt-2 pt-2 border-t border-stub-border/50">
                       <a
-                        href={`https://www.setlist.fm/setlist/-/-${setlist.id}.html`}
+                        href={setlist.url || `https://www.setlist.fm/setlist/-/-${setlist.id}.html`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center gap-1 text-[10px] hover:opacity-80 transition-opacity"

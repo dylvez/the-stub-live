@@ -47,6 +47,7 @@ export function convertSetlistsToEvents(setlists: SetlistResult[]): ConvertedSet
       venueId,
       date: Timestamp.fromDate(eventDate),
       status: 'past',
+      ticketUrl: sl.url,
       source: 'setlistfm',
       externalIds: {},
       lastUpdated: Timestamp.now(),

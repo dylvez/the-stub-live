@@ -516,7 +516,18 @@ function EventRow({
                 year: eventDate.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,
               })}
             </span>
-            {isSetlistFm && <Badge variant="cyan" className="text-[8px]">setlist.fm</Badge>}
+            {isSetlistFm && event.ticketUrl ? (
+              <a
+                href={event.ticketUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <Badge variant="cyan" className="text-[8px] hover:bg-stub-cyan/25 transition-colors cursor-pointer">setlist.fm</Badge>
+              </a>
+            ) : isSetlistFm ? (
+              <Badge variant="cyan" className="text-[8px]">setlist.fm</Badge>
+            ) : null}
           </div>
         </div>
         <div className="flex items-center gap-2 shrink-0">

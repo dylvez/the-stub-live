@@ -19,6 +19,7 @@ interface SfmSet {
 
 interface SfmSetlist {
   id: string;
+  url?: string;
   eventDate: string;
   artist: { name: string; mbid: string };
   venue: { name: string; city: { name: string; state?: string; country: { code: string } } };
@@ -27,6 +28,7 @@ interface SfmSetlist {
 
 export interface SetlistResult {
   id: string;
+  url?: string;
   date: string;
   artistName?: string;
   venueName: string;
@@ -38,6 +40,7 @@ export interface SetlistResult {
 function mapSetlist(s: SfmSetlist): SetlistResult {
   return {
     id: s.id,
+    url: s.url,
     date: s.eventDate,
     artistName: s.artist.name,
     venueName: s.venue.name,
