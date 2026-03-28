@@ -79,6 +79,10 @@ export function VenuePage(): React.JSX.Element {
 
   const { user } = useAuth();
 
+  // Shows tab
+  type ShowsTab = 'upcoming' | 'recent';
+  const [showsTab, setShowsTab] = useState<ShowsTab>('upcoming');
+
   // Personal venue notes
   const [venueNote, setVenueNote] = useState('');
   const [editingNote, setEditingNote] = useState(false);
@@ -150,9 +154,11 @@ export function VenuePage(): React.JSX.Element {
     .filter((e) => e.date.toDate() > now)
     .sort((a, b) => a.date.toDate().getTime() - b.date.toDate().getTime());
 
-  // Combine TM past events with setlist.fm past events, sorted by date desc
+  // Combine TM past events with setlist.fm past events, sorted by date desc.
+  // Filter out any "past" events whose dates are actually in the future (bad data from setlist.fm).
   const tmPastEvents = allEvents.filter((e) => e.date.toDate() <= now);
-  const allPastEvents = [...tmPastEvents, ...sfmPastEvents]
+  const filteredSfmPast = sfmPastEvents.filter((e) => e.date.toDate() <= now);
+  const allPastEvents = [...tmPastEvents, ...filteredSfmPast]
     .sort((a, b) => b.date.toDate().getTime() - a.date.toDate().getTime());
 
   // Merge all artist maps
@@ -370,67 +376,93 @@ export function VenuePage(): React.JSX.Element {
           </Card>
         </section>
 
-        {/* Upcoming shows */}
+        {/* Shows — tabbed: Upcoming / Recent */}
         <section className="mb-6">
-          <h2 className="font-display font-bold text-stub-text text-lg mb-3 flex items-center gap-2">
-            <Calendar className="w-5 h-5 text-stub-amber" />
-            Upcoming Shows
-            {upcomingEvents.length > 0 && (
-              <span className="text-xs font-mono text-stub-muted ml-auto">{upcomingEvents.length}</span>
-            )}
-          </h2>
-          {upcomingEvents.length > 0 ? (
-            <div className="space-y-2">
-              {upcomingEvents.map((event) => (
-                <EventRow
-                  key={event.id}
-                  event={event}
-                  artist={allArtists.get(event.artistIds[0])}
-                  onArtistClick={() => navigate(`/artist/${event.artistIds[0]}`)}
-                  onStubIt={() => handleStubIt(event)}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-6 text-stub-muted text-sm">
-              No upcoming shows found at this venue.
-            </div>
-          )}
-        </section>
+          <div className="flex items-center gap-1 mb-4 border-b border-stub-border">
+            <button
+              onClick={() => setShowsTab('upcoming')}
+              className={`flex items-center gap-1.5 px-3 py-2 text-sm font-semibold transition-colors border-b-2 -mb-px
+                ${showsTab === 'upcoming'
+                  ? 'text-stub-amber border-stub-amber'
+                  : 'text-stub-muted border-transparent hover:text-stub-text'}`}
+            >
+              <Calendar className="w-4 h-4" />
+              Upcoming
+              {upcomingEvents.length > 0 && (
+                <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded-full
+                  ${showsTab === 'upcoming' ? 'bg-stub-amber/15 text-stub-amber' : 'bg-stub-border text-stub-muted'}`}>
+                  {upcomingEvents.length}
+                </span>
+              )}
+            </button>
+            <button
+              onClick={() => setShowsTab('recent')}
+              className={`flex items-center gap-1.5 px-3 py-2 text-sm font-semibold transition-colors border-b-2 -mb-px
+                ${showsTab === 'recent'
+                  ? 'text-stub-amber border-stub-amber'
+                  : 'text-stub-muted border-transparent hover:text-stub-text'}`}
+            >
+              <Clock className="w-4 h-4" />
+              Recent
+              {allPastEvents.length > 0 && (
+                <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded-full
+                  ${showsTab === 'recent' ? 'bg-stub-amber/15 text-stub-amber' : 'bg-stub-border text-stub-muted'}`}>
+                  {allPastEvents.length}
+                </span>
+              )}
+            </button>
+          </div>
 
-        {/* Past shows */}
-        <section className="mb-6">
-          <h2 className="font-display font-bold text-stub-text text-lg mb-3 flex items-center gap-2">
-            <Clock className="w-5 h-5 text-stub-muted" />
-            Recent Shows
-            {allPastEvents.length > 0 && (
-              <span className="text-xs font-mono text-stub-muted ml-auto">{allPastEvents.length}</span>
-            )}
-          </h2>
-          {sfmLoading && (
-            <div className="flex items-center justify-center gap-2 py-4 text-stub-muted text-sm">
-              <Loader2 className="w-4 h-4 animate-spin" />
-              Loading past shows...
-            </div>
+          {showsTab === 'upcoming' && (
+            <>
+              {upcomingEvents.length > 0 ? (
+                <div className="space-y-2">
+                  {upcomingEvents.map((event) => (
+                    <EventRow
+                      key={event.id}
+                      event={event}
+                      artist={allArtists.get(event.artistIds[0])}
+                      onArtistClick={() => navigate(`/artist/${event.artistIds[0]}`)}
+                      onStubIt={() => handleStubIt(event)}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-6 text-stub-muted text-sm">
+                  No upcoming shows found at this venue.
+                </div>
+              )}
+            </>
           )}
-          {!sfmLoading && allPastEvents.length > 0 ? (
-            <div className="space-y-2">
-              {allPastEvents.map((event) => (
-                <EventRow
-                  key={event.id}
-                  event={event}
-                  artist={allArtists.get(event.artistIds[0])}
-                  isPast
-                  onArtistClick={() => navigate(`/artist/${event.artistIds[0]}`)}
-                  onStubIt={() => handleStubIt(event)}
-                />
-              ))}
-            </div>
-          ) : !sfmLoading ? (
-            <div className="text-center py-6 text-stub-muted text-sm">
-              No recent shows found at this venue.
-            </div>
-          ) : null}
+
+          {showsTab === 'recent' && (
+            <>
+              {sfmLoading && (
+                <div className="flex items-center justify-center gap-2 py-4 text-stub-muted text-sm">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Loading past shows...
+                </div>
+              )}
+              {!sfmLoading && allPastEvents.length > 0 ? (
+                <div className="space-y-2">
+                  {allPastEvents.map((event) => (
+                    <EventRow
+                      key={event.id}
+                      event={event}
+                      artist={allArtists.get(event.artistIds[0])}
+                      isPast
+                      onArtistClick={() => navigate(`/artist/${event.artistIds[0]}`)}
+                      onStubIt={() => handleStubIt(event)}
+                    />
+                  ))}
+                </div>
+              ) : !sfmLoading ? (
+                <div className="text-center py-6 text-stub-muted text-sm">
+                  No recent shows found at this venue.
+                </div>
+              ) : null}
+            </>
+          )}
         </section>
       </div>
     </div>
