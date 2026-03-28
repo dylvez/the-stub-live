@@ -369,10 +369,15 @@ export function ArtistPage(): React.JSX.Element {
                         <div className="text-xs font-mono text-stub-muted">
                           {formatSetlistDate(setlist.date)}
                         </div>
-                        <div className="text-sm text-stub-text flex items-center gap-1">
+                        <a
+                          href={`https://www.google.com/maps/search/${encodeURIComponent(`${setlist.venueName} ${setlist.venueCity}`)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sm text-stub-cyan hover:text-stub-cyan/80 flex items-center gap-1 transition-colors"
+                        >
                           <MapPin className="w-3 h-3" />
                           {setlist.venueName}, {setlist.venueCity}
-                        </div>
+                        </a>
                       </div>
                       <div className="flex items-center gap-2">
                         {setlist.songs.length > 0 && (
@@ -417,7 +422,8 @@ export function ArtistPage(): React.JSX.Element {
                         href={`https://www.setlist.fm/setlist/-/-${setlist.id}.html`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-1 text-[10px] text-stub-muted hover:text-stub-text transition-colors"
+                        className="flex items-center gap-1 text-[10px] hover:opacity-80 transition-opacity"
+                        style={{ color: '#85b146' }}
                       >
                         <ExternalLink className="w-2.5 h-2.5" />
                         via setlist.fm
