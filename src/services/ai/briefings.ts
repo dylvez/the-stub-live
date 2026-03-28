@@ -28,6 +28,8 @@ interface BriefingResponse {
     soundDescription: string;
     liveReputation: string;
     forFansOf: string[];
+    websiteUrl?: string | null;
+    imageUrl?: string | null;
   };
   cached?: boolean;
   status?: string;
@@ -47,6 +49,8 @@ export async function generateArtistBriefing(
       soundDescription: data.briefing.soundDescription ?? '',
       liveReputation: data.briefing.liveReputation ?? '',
       forFansOf: Array.isArray(data.briefing.forFansOf) ? data.briefing.forFansOf : [],
+      websiteUrl: data.briefing.websiteUrl ?? null,
+      imageUrl: data.briefing.imageUrl ?? null,
       modelVersion: 'sonar-pro',
     };
   } catch (err) {

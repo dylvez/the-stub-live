@@ -16,6 +16,8 @@ Given information about an artist, produce a JSON object (no markdown, no code f
 - soundDescription: 1-2 sentences describing their sonic palette and genre influences
 - liveReputation: 1-2 sentences about their reputation as a live act
 - forFansOf: array of 3-5 similar artist names (strings only)
+- websiteUrl: the artist's official website URL (e.g. their .com domain, NOT social media links like instagram/twitter/facebook/youtube). If you cannot find one, use null.
+- imageUrl: a direct URL to a high-quality photo of the artist (must be a real working image URL ending in .jpg, .jpeg, .png, or .webp, or from a known image CDN). If you cannot find one, use null.
 
 Respond with raw JSON only. No explanation, no markdown fences.`;
 
@@ -136,6 +138,8 @@ exports.generateArtistBriefing = onCall(
         soundDescription: parsed.soundDescription ?? "",
         liveReputation: parsed.liveReputation ?? "",
         forFansOf: Array.isArray(parsed.forFansOf) ? parsed.forFansOf : [],
+        websiteUrl: parsed.websiteUrl || null,
+        imageUrl: parsed.imageUrl || null,
       };
 
       // Persist to Firestore and clear lock

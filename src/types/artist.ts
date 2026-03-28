@@ -24,6 +24,8 @@ export interface AiBriefing {
   soundDescription: string;
   liveReputation: string;
   forFansOf: string[];
+  websiteUrl?: string | null;
+  imageUrl?: string | null;
   generatedAt?: Timestamp;
   modelVersion: string;
 }

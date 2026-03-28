@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import {
-  ArrowLeft, ExternalLink, Share2, Video, Play,
+  ArrowLeft, ExternalLink, Share2, Video, Play, Globe,
   Calendar, MapPin, ListMusic, PenTool, Loader2,
 } from 'lucide-react';
 import { Card, Badge, Button } from '@/components/ui';
@@ -99,8 +99,8 @@ export function ArtistPage(): React.JSX.Element {
       </Helmet>
       {/* Hero */}
       <div className="relative h-64 sm:h-80 overflow-hidden">
-        {artist.images.primary ? (
-          <img src={artist.images.primary} alt={artist.name} className="w-full h-full object-cover" />
+        {(artist.images.primary || briefing?.imageUrl) ? (
+          <img src={artist.images.primary || briefing?.imageUrl || ''} alt={artist.name} className="w-full h-full object-cover" />
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-stub-amber/30 to-stub-coral/30 flex items-center justify-center">
             <span className="text-6xl font-display font-bold text-stub-amber/30">{artist.name.charAt(0)}</span>
@@ -149,6 +149,17 @@ export function ArtistPage(): React.JSX.Element {
           >
             Share
           </Button>
+          {(artist.externalIds.websiteUrl || briefing?.websiteUrl) && (
+            <a
+              href={artist.externalIds.websiteUrl || briefing?.websiteUrl || ''}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Button variant="secondary" icon={<Globe className="w-4 h-4" />}>
+                Website
+              </Button>
+            </a>
+          )}
         </div>
 
         {/* Last.fm bio or AI Briefing */}
