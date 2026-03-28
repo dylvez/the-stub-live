@@ -369,31 +369,13 @@ export function ArtistPage(): React.JSX.Element {
                         <div className="text-xs font-mono text-stub-muted">
                           {formatSetlistDate(setlist.date)}
                         </div>
-                        {(() => {
-                          const normName = setlist.venueName.toLowerCase().replace(/^the\s+/, '').trim();
-                          const matchedVenue = Array.from(venues.values()).find((v) =>
-                            v.name.toLowerCase().replace(/^the\s+/, '').trim() === normName
-                          );
-                          return matchedVenue ? (
-                            <button
-                              onClick={() => navigate(`/venue/${matchedVenue.id}`)}
-                              className="text-sm text-stub-cyan hover:text-stub-cyan/80 flex items-center gap-1 transition-colors"
-                            >
-                              <MapPin className="w-3 h-3" />
-                              {setlist.venueName}, {setlist.venueCity}
-                            </button>
-                          ) : (
-                            <a
-                              href={`https://www.google.com/maps/search/${encodeURIComponent(`${setlist.venueName} ${setlist.venueCity}`)}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-sm text-stub-cyan hover:text-stub-cyan/80 flex items-center gap-1 transition-colors"
-                            >
-                              <MapPin className="w-3 h-3" />
-                              {setlist.venueName}, {setlist.venueCity}
-                            </a>
-                          );
-                        })()}
+                        <button
+                          onClick={() => navigate(`/search?q=${encodeURIComponent(setlist.venueName)}`)}
+                          className="text-sm text-stub-cyan hover:text-stub-cyan/80 flex items-center gap-1 transition-colors"
+                        >
+                          <MapPin className="w-3 h-3" />
+                          {setlist.venueName}, {setlist.venueCity}
+                        </button>
                       </div>
                       <div className="flex items-center gap-2">
                         {setlist.songs.length > 0 && (
