@@ -1,8 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Map as MapIcon, ChevronRight, Filter } from 'lucide-react';
-import { SECTION_ICONS } from '@/utils/constants';
-import { Input, Card } from '@/components/ui';
+import { Map as MapIcon, ChevronRight, Filter, TrendingUp, Compass, Radio, Sparkles } from 'lucide-react';
+import { Input, Card, SectionHeader, HorizontalScroll, FilterChip } from '@/components/ui';
 import { SearchResults } from '@/components/search';
 import { useSearch } from '@/hooks/useSearch';
 import { useEvents } from '@/hooks/useEvents';
@@ -179,17 +178,13 @@ export function SearchPage(): React.JSX.Element {
               <span className="text-[10px] text-stub-muted uppercase tracking-wider">Date</span>
               <div className="flex flex-wrap gap-1.5 mt-1">
                 {DATE_FILTERS.map(({ key, label }) => (
-                  <button
+                  <FilterChip
                     key={key}
+                    label={label}
+                    isActive={dateFilter === key}
                     onClick={() => setDateFilter(key)}
-                    className={`px-2.5 py-1 rounded-full text-xs transition-colors
-                      ${dateFilter === key
-                        ? 'bg-stub-amber text-stub-bg font-medium'
-                        : 'bg-stub-bg border border-stub-border text-stub-muted hover:text-stub-text hover:border-stub-amber/50'
-                      }`}
-                  >
-                    {label}
-                  </button>
+                    activeColor="amber"
+                  />
                 ))}
               </div>
             </div>
@@ -199,17 +194,13 @@ export function SearchPage(): React.JSX.Element {
               <span className="text-[10px] text-stub-muted uppercase tracking-wider">Genre</span>
               <div className="flex flex-wrap gap-1.5 mt-1">
                 {GENRE_FILTERS.map((genre) => (
-                  <button
+                  <FilterChip
                     key={genre}
+                    label={genre}
+                    isActive={genreFilter === genre}
                     onClick={() => setGenreFilter(genre)}
-                    className={`px-2.5 py-1 rounded-full text-xs transition-colors
-                      ${genreFilter === genre
-                        ? 'bg-stub-amber text-stub-bg font-medium'
-                        : 'bg-stub-bg border border-stub-border text-stub-muted hover:text-stub-text hover:border-stub-amber/50'
-                      }`}
-                  >
-                    {genre}
-                  </button>
+                    activeColor="amber"
+                  />
                 ))}
               </div>
             </div>
@@ -221,16 +212,18 @@ export function SearchPage(): React.JSX.Element {
         <>
           {/* Browse sections */}
           <section className="mb-6">
-            <h2 className="font-display font-bold text-stub-text text-lg mb-3 flex items-center gap-2">
-              <img src={SECTION_ICONS.trending} alt="Trending" className="w-5 h-5" />
-              Trending in {userLocation.city}
-            </h2>
+            <SectionHeader
+              icon={<TrendingUp className="w-5 h-5 text-stub-amber" />}
+              title={`Trending in ${userLocation.city}`}
+            />
             <div className="grid grid-cols-2 gap-2">
               {Array.from(trendingArtists.values()).slice(0, 4).map((artist) => (
-                <div
+                <Card
                   key={artist.id}
+                  hover
+                  padding={false}
                   onClick={() => navigate(`/artist/${artist.id}`)}
-                  className="bg-stub-surface rounded-xl border border-stub-border overflow-hidden cursor-pointer paper-grain hover:border-stub-border-light transition-colors"
+                  className="overflow-hidden"
                 >
                   <div className="h-24 relative">
                     {artist.images.primary ? (
@@ -243,16 +236,16 @@ export function SearchPage(): React.JSX.Element {
                       {artist.name}
                     </span>
                   </div>
-                </div>
+                </Card>
               ))}
             </div>
           </section>
 
           <section className="mb-6">
-            <h2 className="font-display font-bold text-stub-text text-lg mb-3 flex items-center gap-2">
-              <img src={SECTION_ICONS.discover} alt="Discover" className="w-5 h-5" />
-              Discover
-            </h2>
+            <SectionHeader
+              icon={<Compass className="w-5 h-5 text-stub-cyan" />}
+              title="Discover"
+            />
             <div className="space-y-2">
               {/* Under the Radar */}
               <Card
@@ -262,7 +255,7 @@ export function SearchPage(): React.JSX.Element {
               >
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-lg bg-stub-cyan/10 flex items-center justify-center text-stub-cyan">
-                    <img src={SECTION_ICONS.radar} alt="Under the Radar" className="w-5 h-5" />
+                    <Radio className="w-5 h-5" />
                   </div>
                   <div className="flex-1">
                     <div className="text-sm font-semibold text-stub-text">Under the Radar</div>
@@ -272,7 +265,7 @@ export function SearchPage(): React.JSX.Element {
                 </div>
               </Card>
               {activeDiscover === 'radar' && (
-                <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1">
+                <HorizontalScroll>
                   {radarArtists.length > 0 ? radarArtists.map((a) => (
                     <div
                       key={a.id}
@@ -299,7 +292,7 @@ export function SearchPage(): React.JSX.Element {
                   )) : (
                     <div className="text-xs text-stub-muted py-2">No under-the-radar artists found nearby.</div>
                   )}
-                </div>
+                </HorizontalScroll>
               )}
 
               {/* New to Town */}
@@ -310,7 +303,7 @@ export function SearchPage(): React.JSX.Element {
               >
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-lg bg-stub-cyan/10 flex items-center justify-center text-stub-cyan">
-                    <img src={SECTION_ICONS.newToTown} alt="New to Town" className="w-5 h-5" />
+                    <Sparkles className="w-5 h-5" />
                   </div>
                   <div className="flex-1">
                     <div className="text-sm font-semibold text-stub-text">New to Town</div>
@@ -320,7 +313,7 @@ export function SearchPage(): React.JSX.Element {
                 </div>
               </Card>
               {activeDiscover === 'newToTown' && (
-                <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1">
+                <HorizontalScroll>
                   {newToTownArtists.length > 0 ? newToTownArtists.map((a) => (
                     <div
                       key={a.id}
@@ -347,7 +340,7 @@ export function SearchPage(): React.JSX.Element {
                   )) : (
                     <div className="text-xs text-stub-muted py-2">No first-time visitors found nearby.</div>
                   )}
-                </div>
+                </HorizontalScroll>
               )}
 
               {/* Map View — only show when Google Maps is configured */}

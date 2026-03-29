@@ -6,7 +6,8 @@ import {
   ArrowLeft, MapPin, Calendar, Clock, Globe,
   Ticket, Music, Lightbulb, Headphones, Share2, Navigation,
 } from 'lucide-react';
-import { Card, Badge, Button } from '@/components/ui';
+import { Card, Badge, Button, EmptyState } from '@/components/ui';
+import { BrandedSpinner } from '@/components/ui/BrandedSpinner';
 import { StubItButton } from '@/components/ui/StubItButton';
 import { useEvent } from '@/hooks/useEvent';
 import { useTicketLookup } from '@/hooks/useTicketLookup';
@@ -84,17 +85,18 @@ export function EventPage(): React.JSX.Element {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-2 border-stub-amber border-t-transparent rounded-full animate-spin" />
+        <BrandedSpinner size={32} />
       </div>
     );
   }
 
   if (error || !event) {
     return (
-      <div className="flex flex-col items-center justify-center h-64 gap-4">
-        <p className="text-stub-muted">{error ?? 'Event not found.'}</p>
-        <Button variant="secondary" onClick={() => navigate('/')}>Back to Discovery</Button>
-      </div>
+      <EmptyState
+        title={error ?? 'Event not found.'}
+        description="It may have expired from cache."
+        action={{ label: 'Back to Discovery', to: '/' }}
+      />
     );
   }
 
@@ -223,53 +225,44 @@ export function EventPage(): React.JSX.Element {
         {/* Action Buttons */}
         <div className="flex flex-wrap gap-2 mb-6">
           {hasTicketUrl && resolvedTicketUrl && (
-            <a
-              href={resolvedTicketUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium
-                bg-stub-amber/15 text-stub-amber hover:bg-stub-amber/25 transition-colors"
+            <Button variant="tinted" tintColor="amber" shape="pill" size="sm"
+              href={resolvedTicketUrl} target="_blank" rel="noopener noreferrer"
+              icon={<Ticket className="w-4 h-4" />}
             >
-              <Ticket className="w-4 h-4" /> Tickets
-            </a>
+              Tickets
+            </Button>
           )}
           <StubItButton onClick={handleStubIt} />
-          <button
-            onClick={handleShare}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium
-              bg-stub-cyan/10 text-stub-cyan hover:bg-stub-cyan/20 transition-colors"
+          <Button variant="tinted" tintColor="cyan" shape="pill" size="sm"
+            onClick={handleShare} icon={<Share2 className="w-4 h-4" />}
           >
-            <Share2 className="w-4 h-4" /> Share
-          </button>
+            Share
+          </Button>
           {venue && (
-            <a
+            <Button variant="tinted" tintColor="green" shape="pill" size="sm"
               href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${venue.name} ${venue.address} ${venue.city} ${venue.state}`)}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium
-                bg-stub-green/10 text-stub-green hover:bg-stub-green/20 transition-colors"
+              target="_blank" rel="noopener noreferrer"
+              icon={<Navigation className="w-4 h-4" />}
             >
-              <Navigation className="w-4 h-4" /> Directions
-            </a>
+              Directions
+            </Button>
           )}
           <div className="flex-1" />
           {artist && (
-            <button
+            <Button variant="secondary" shape="pill" size="sm"
               onClick={() => navigate(`/artist/${event.artistIds[0]}`)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium
-                bg-stub-surface text-stub-text border border-stub-border hover:border-stub-amber/30 hover:bg-stub-surface-hover transition-colors"
+              icon={<Music className="w-4 h-4" />}
             >
-              <Music className="w-4 h-4" /> {artist.name}
-            </button>
+              {artist.name}
+            </Button>
           )}
           {venue && (
-            <button
+            <Button variant="secondary" shape="pill" size="sm"
               onClick={() => navigate(`/venue/${venue.id}`)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium
-                bg-stub-surface text-stub-text border border-stub-border hover:border-stub-cyan/30 hover:bg-stub-surface-hover transition-colors"
+              icon={<MapPin className="w-4 h-4" />}
             >
-              <MapPin className="w-4 h-4" /> {venue.name}
-            </button>
+              {venue.name}
+            </Button>
           )}
         </div>
 

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, LogIn } from 'lucide-react';
+import { Button } from '@/components/ui';
 import { LocationChip, LocationPicker } from '@/components/location';
 import { useLocation } from '@/contexts/LocationContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -65,13 +66,12 @@ export function TopBar(): React.JSX.Element {
                 </button>
               </>
             ) : (
-              <button
+              <Button variant="primary" shape="pill" size="sm"
                 onClick={() => navigate('/login')}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-stub-amber text-stub-bg text-xs font-semibold rounded-full hover:bg-stub-amber-dim transition-colors"
+                icon={<LogIn className="w-3.5 h-3.5" />}
               >
-                <LogIn className="w-3.5 h-3.5" />
                 Sign In
-              </button>
+              </Button>
             )}
           </div>
         </div>

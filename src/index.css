@@ -65,6 +65,8 @@ body {
   border-radius: inherit;
 }
 
+/* StubCard-specific: simulates physical ticket stub tear.
+   Intentionally NOT used on other card types — this is the Stub's visual identity. */
 .torn-edge-right {
   clip-path: polygon(
     0% 0%,
@@ -127,6 +129,10 @@ body {
   border-right: 2px dashed var(--color-stub-border-light);
 }
 
+/* Glow effects — primary featured cards only (briefings, expanded stubs).
+   Not for list items or secondary containers.
+   Opacity scale: /10 icon bg, /15 badges+tinted buttons, /20 badge hover,
+   /25 tinted button hover, /30 accent borders, /50 border hover+focus rings */
 .glow-amber {
   box-shadow: 0 0 20px rgba(232, 168, 56, 0.15), 0 0 40px rgba(232, 168, 56, 0.05);
 }

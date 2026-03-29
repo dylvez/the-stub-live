@@ -5,7 +5,8 @@ import { Flame, Filter, MapPin, RefreshCw, AlertCircle, Map as MapIcon, List, Sp
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '@/services/firebase/config';
 import { EventCard } from '@/components/stub';
-import { Button } from '@/components/ui';
+import { Button, SectionHeader, HorizontalScroll, FilterChip } from '@/components/ui';
+import { BrandedSpinner } from '@/components/ui/BrandedSpinner';
 import { useEvents } from '@/hooks/useEvents';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLocation as useAppLocation } from '@/contexts/LocationContext';
@@ -264,7 +265,7 @@ export function DiscoveryPage(): React.JSX.Element {
 
       {/* Map view */}
       {viewMode === 'map' && isGoogleMapsConfigured && (
-        <Suspense fallback={<div className="flex items-center justify-center h-96"><div className="w-8 h-8 border-2 border-stub-amber border-t-transparent rounded-full animate-spin" /></div>}>
+        <Suspense fallback={<div className="flex items-center justify-center h-96"><BrandedSpinner size={32} /></div>}>
           <EventMap
             events={events}
             venues={venues}
@@ -323,7 +324,7 @@ export function DiscoveryPage(): React.JSX.Element {
 
           {/* Tonight carousel */}
           {carouselTab === 'tonight' && tonightEvents.length > 0 && (
-            <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
+            <HorizontalScroll>
               {tonightEvents.map((event) => {
                 const artist = artists.get(event.artistIds[0]);
                 const venue = venues.get(event.venueId);
@@ -377,12 +378,12 @@ export function DiscoveryPage(): React.JSX.Element {
                   </motion.div>
                 );
               })}
-            </div>
+            </HorizontalScroll>
           )}
 
           {/* Popular Venues carousel */}
           {carouselTab === 'venues' && popularVenues.length > 0 && (
-            <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
+            <HorizontalScroll>
               {popularVenues.map(({ venue: baseVenue, showCount }) => {
                 const v = enrichedVenues.get(normalizeVenueName(baseVenue.name)) ?? baseVenue;
                 return (
@@ -419,7 +420,7 @@ export function DiscoveryPage(): React.JSX.Element {
                   </motion.div>
                 );
               })}
-            </div>
+            </HorizontalScroll>
           )}
         </section>
       )}
@@ -427,10 +428,10 @@ export function DiscoveryPage(): React.JSX.Element {
       {/* Recommended for You */}
       {recommendedEvents.length > 0 && (
         <section className="mb-6">
-          <h2 className="font-display font-bold text-stub-text text-lg mb-3 flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-stub-amber" />
-            Recommended for You
-          </h2>
+          <SectionHeader
+            icon={<Sparkles className="w-5 h-5 text-stub-amber" />}
+            title="Recommended for You"
+          />
           <div className="space-y-2">
             {recommendedEvents.map(({ event }) => {
               const artist = artists.get(event.artistIds[0]);
@@ -471,28 +472,23 @@ export function DiscoveryPage(): React.JSX.Element {
         </Button>
         <div className="w-px h-5 bg-stub-border" />
         {genreFilters.map((genre) => (
-          <button
+          <FilterChip
             key={genre}
+            label={genre}
+            isActive={activeGenre === genre}
             onClick={() => setActiveGenre(genre)}
-            className={`px-3 py-1 text-xs rounded-full whitespace-nowrap transition-colors
-              ${activeGenre === genre
-                ? 'bg-stub-cyan text-stub-bg font-semibold'
-                : 'bg-stub-surface text-stub-muted hover:text-stub-text border border-stub-border'
-              }`}
-          >
-            {genre}
-          </button>
+          />
         ))}
       </div>
 
       {/* Upcoming shows list */}
       <section>
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="font-display font-bold text-stub-text text-lg">Upcoming Shows</h2>
-          {upcomingEvents.length > 0 && (
+        <SectionHeader
+          title="Upcoming Shows"
+          trailing={upcomingEvents.length > 0 ? (
             <span className="text-xs text-stub-muted font-mono">{upcomingEvents.length} events</span>
-          )}
-        </div>
+          ) : undefined}
+        />
         <div className="space-y-3">
           {isLoading ? (
             <>

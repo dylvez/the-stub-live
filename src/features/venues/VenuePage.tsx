@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import { BrandedSpinner } from '@/components/ui/BrandedSpinner';
 import { StubItButton } from '@/components/ui/StubItButton';
-import { Card, Badge } from '@/components/ui';
+import { Card, Badge, Button, EmptyState, SectionHeader } from '@/components/ui';
 import { useVenue } from '@/hooks/useVenue';
 import { useEvents } from '@/hooks/useEvents';
 import { isSetlistFmConfigured } from '@/services/api/config';
@@ -127,17 +127,18 @@ export function VenuePage(): React.JSX.Element {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-2 border-stub-amber border-t-transparent rounded-full animate-spin" />
+        <BrandedSpinner size={32} />
       </div>
     );
   }
 
   if (!venue) {
     return (
-      <div className="flex flex-col items-center justify-center h-64 text-stub-muted">
-        <img src="/images/empty-venue-notfound.png" alt="Venue not found" className="w-32 h-32 mb-4 opacity-80" />
-        Venue not found.
-      </div>
+      <EmptyState
+        image="/images/empty-venue-notfound.png"
+        title="Venue not found."
+        action={{ label: 'Back to Discovery', to: '/' }}
+      />
     );
   }
 
@@ -218,34 +219,28 @@ export function VenuePage(): React.JSX.Element {
       <div className="px-4 -mt-2 relative z-10">
         {/* Action buttons */}
         <div className="flex flex-wrap gap-2 mb-6">
-          <a
+          <Button variant="tinted" tintColor="green" shape="pill" size="sm"
             href={`https://www.google.com/maps/dir/?api=1&destination=${venue.lat},${venue.lng}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium
-              bg-stub-green/10 text-stub-green hover:bg-stub-green/20 transition-colors"
+            target="_blank" rel="noopener noreferrer"
+            icon={<Navigation className="w-4 h-4" />}
           >
-            <Navigation className="w-4 h-4" /> Directions
-          </a>
+            Directions
+          </Button>
           {venue.phone && (
-            <a
+            <Button variant="tinted" tintColor="cyan" shape="pill" size="sm"
               href={`tel:${venue.phone}`}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium
-                bg-stub-cyan/10 text-stub-cyan hover:bg-stub-cyan/20 transition-colors"
+              icon={<Phone className="w-4 h-4" />}
             >
-              <Phone className="w-4 h-4" /> Call
-            </a>
+              Call
+            </Button>
           )}
           {venue.website && (
-            <a
-              href={venue.website}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium
-                bg-stub-amber/15 text-stub-amber hover:bg-stub-amber/25 transition-colors"
+            <Button variant="tinted" tintColor="amber" shape="pill" size="sm"
+              href={venue.website} target="_blank" rel="noopener noreferrer"
+              icon={<Globe className="w-4 h-4" />}
             >
-              <Globe className="w-4 h-4" /> Website
-            </a>
+              Website
+            </Button>
           )}
         </div>
 
@@ -329,10 +324,10 @@ export function VenuePage(): React.JSX.Element {
 
         {/* Accessibility */}
         <section className="mb-6">
-          <h2 className="font-display font-bold text-stub-text text-lg mb-3 flex items-center gap-2">
-            <Accessibility className="w-5 h-5 text-stub-cyan" />
-            Accessibility
-          </h2>
+          <SectionHeader
+            icon={<Accessibility className="w-5 h-5 text-stub-cyan" />}
+            title="Accessibility"
+          />
           <Card>
             <div className="space-y-2 text-sm">
               <div className="flex items-center justify-between">
@@ -534,16 +529,14 @@ function EventRow({
         </div>
         <div className="flex items-center gap-2 shrink-0">
           {!isPast && event.ticketUrl && (
-            <a
-              href={event.ticketUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={(e) => e.stopPropagation()}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium
-                bg-stub-amber/15 text-stub-amber hover:bg-stub-amber/25 transition-colors"
-            >
-              <Ticket className="w-4 h-4" /> Tickets
-            </a>
+            <span onClick={(e) => e.stopPropagation()}>
+              <Button variant="tinted" tintColor="amber" shape="pill" size="sm"
+                href={event.ticketUrl} target="_blank" rel="noopener noreferrer"
+                icon={<Ticket className="w-4 h-4" />}
+              >
+                Tickets
+              </Button>
+            </span>
           )}
           <StubItButton onClick={onStubIt} />
         </div>
@@ -562,10 +555,10 @@ function VenueHours({ hours }: { hours: string[] }): React.JSX.Element {
 
   return (
     <section className="mb-6">
-      <h2 className="font-display font-bold text-stub-text text-lg mb-3 flex items-center gap-2">
-        <Clock className="w-5 h-5 text-stub-amber" />
-        Hours
-      </h2>
+      <SectionHeader
+        icon={<Clock className="w-5 h-5 text-stub-amber" />}
+        title="Hours"
+      />
       <Card>
         <button
           onClick={() => setExpanded(!expanded)}

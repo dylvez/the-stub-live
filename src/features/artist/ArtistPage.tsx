@@ -7,7 +7,7 @@ import {
   Calendar, Clock, MapPin, Share2, Globe, Ticket,
 } from 'lucide-react';
 import { BrandedSpinner } from '@/components/ui/BrandedSpinner';
-import { Card, Badge } from '@/components/ui';
+import { Card, Badge, Button, EmptyState } from '@/components/ui';
 import { StubItButton } from '@/components/ui/StubItButton';
 import { useArtist } from '@/hooks/useArtist';
 import { useEvents } from '@/hooks/useEvents';
@@ -77,17 +77,18 @@ export function ArtistPage(): React.JSX.Element {
   if (artistLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-2 border-stub-amber border-t-transparent rounded-full animate-spin" />
+        <BrandedSpinner size={32} />
       </div>
     );
   }
 
   if (!artist) {
     return (
-      <div className="flex flex-col items-center justify-center h-64 text-stub-muted">
-        <img src="/images/empty-artist-notfound.png" alt="Artist not found" className="w-32 h-32 mb-4 opacity-80" />
-        Artist not found.
-      </div>
+      <EmptyState
+        image="/images/empty-artist-notfound.png"
+        title="Artist not found."
+        action={{ label: 'Back to Discovery', to: '/' }}
+      />
     );
   }
 
@@ -159,7 +160,7 @@ export function ArtistPage(): React.JSX.Element {
       <div className="px-4 -mt-2 relative z-10">
         {/* Action buttons */}
         <div className="flex flex-wrap gap-2 mb-6">
-          <button
+          <Button variant="tinted" tintColor="cyan" shape="pill" size="sm"
             onClick={() => {
               const url = window.location.href;
               if (navigator.share) {
@@ -168,21 +169,18 @@ export function ArtistPage(): React.JSX.Element {
                 navigator.clipboard.writeText(url).catch(() => {});
               }
             }}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium
-              bg-stub-cyan/10 text-stub-cyan hover:bg-stub-cyan/20 transition-colors"
+            icon={<Share2 className="w-4 h-4" />}
           >
-            <Share2 className="w-4 h-4" /> Share
-          </button>
+            Share
+          </Button>
           {(artist.externalIds.websiteUrl || briefing?.websiteUrl) && (
-            <a
+            <Button variant="tinted" tintColor="amber" shape="pill" size="sm"
               href={artist.externalIds.websiteUrl || briefing?.websiteUrl || ''}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium
-                bg-stub-amber/15 text-stub-amber hover:bg-stub-amber/25 transition-colors"
+              target="_blank" rel="noopener noreferrer"
+              icon={<Globe className="w-4 h-4" />}
             >
-              <Globe className="w-4 h-4" /> Website
-            </a>
+              Website
+            </Button>
           )}
         </div>
 
@@ -325,16 +323,14 @@ export function ArtistPage(): React.JSX.Element {
                         </div>
                         <div className="flex items-center gap-2">
                           {event.ticketUrl && (
-                            <a
-                              href={event.ticketUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              onClick={(e) => e.stopPropagation()}
-                              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium
-                                bg-stub-amber/15 text-stub-amber hover:bg-stub-amber/25 transition-colors"
-                            >
-                              <Ticket className="w-4 h-4" /> Tickets
-                            </a>
+                            <span onClick={(e) => e.stopPropagation()}>
+                              <Button variant="tinted" tintColor="amber" shape="pill" size="sm"
+                                href={event.ticketUrl} target="_blank" rel="noopener noreferrer"
+                                icon={<Ticket className="w-4 h-4" />}
+                              >
+                                Tickets
+                              </Button>
+                            </span>
                           )}
                           <StubItButton onClick={() => {
                               const params = new URLSearchParams();

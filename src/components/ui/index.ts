@@ -3,3 +3,7 @@ export { Card } from './Card';
 export { Input } from './Input';
 export { Badge } from './Badge';
 export { Modal } from './Modal';
+export { EmptyState } from './EmptyState';
+export { SectionHeader } from './SectionHeader';
+export { HorizontalScroll } from './HorizontalScroll';
+export { FilterChip } from './FilterChip';

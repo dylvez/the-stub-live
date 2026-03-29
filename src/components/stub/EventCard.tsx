@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { MapPin, Calendar, Clock, ExternalLink, Users, Ticket } from 'lucide-react';
-import { Badge } from '@/components/ui';
+import { Badge, Button } from '@/components/ui';
 import { StubItButton } from '@/components/ui/StubItButton';
 import { getArtistDisplayImage } from '@/utils/artistImage';
 import { isTicketPurchaseUrl } from '@/utils/ticketUrl';
@@ -237,7 +237,7 @@ export function EventCard({
             {genres && genres.length > 0 ? (
               <div className="flex flex-wrap gap-1">
                 {genres.slice(0, 3).map((g) => (
-                  <span key={g} className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-stub-orange/15 text-stub-orange">
+                  <span key={g} className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${accent.badge}`}>
                     {g}
                   </span>
                 ))}
@@ -245,16 +245,14 @@ export function EventCard({
             ) : <div />}
             <div className="flex items-center gap-2 shrink-0">
               {hasTicketUrl && resolvedTicketUrl && (
-                <a
-                  href={resolvedTicketUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={(e) => e.stopPropagation()}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium
-                    bg-stub-amber/15 text-stub-amber hover:bg-stub-amber/25 transition-colors"
-                >
-                  <Ticket className="w-4 h-4" /> Tickets
-                </a>
+                <span onClick={(e) => e.stopPropagation()}>
+                  <Button variant="tinted" tintColor="amber" shape="pill" size="sm"
+                    href={resolvedTicketUrl} target="_blank" rel="noopener noreferrer"
+                    icon={<Ticket className="w-4 h-4" />}
+                  >
+                    Tickets
+                  </Button>
+                </span>
               )}
               <StubItButton onClick={handleStubIt} />
             </div>

@@ -79,6 +79,13 @@ export function LoginPage(): React.JSX.Element {
         <p className="text-xs text-stub-muted mt-6">
           By signing in, you agree to our Terms of Service and Privacy Policy.
         </p>
+
+        <button
+          onClick={() => navigate('/')}
+          className="mt-3 text-sm text-stub-muted hover:text-stub-text transition-colors"
+        >
+          Continue as guest
+        </button>
       </motion.div>
     </div>
   );
