@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui';
 import { StubItButton } from '@/components/ui/StubItButton';
 import { getArtistDisplayImage } from '@/utils/artistImage';
 import { isTicketPurchaseUrl } from '@/utils/ticketUrl';
+import { useTicketLookup } from '@/hooks/useTicketLookup';
 import type { EventData, ArtistData, VenueData } from '@/types';
 
 /** Map genre keywords to accent colors for visual variety */
@@ -104,7 +105,14 @@ export function EventCard({
     ? doorsTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
     : null;
 
-  const hasTicketUrl = isTicketPurchaseUrl(ticketUrl, source);
+  const hasOriginalTicketUrl = isTicketPurchaseUrl(ticketUrl, source);
+  const resolvedTicketUrl = useTicketLookup(
+    artistName,
+    venueName,
+    date,
+    hasOriginalTicketUrl ? ticketUrl : undefined,
+  );
+  const hasTicketUrl = Boolean(resolvedTicketUrl);
 
   function handleCardClick(): void {
     // If eventId is available, navigate to the event page
@@ -236,16 +244,16 @@ export function EventCard({
               </div>
             ) : <div />}
             <div className="flex items-center gap-2 shrink-0">
-              {hasTicketUrl && ticketUrl && (
+              {hasTicketUrl && resolvedTicketUrl && (
                 <a
-                  href={ticketUrl}
+                  href={resolvedTicketUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={(e) => e.stopPropagation()}
-                  className="inline-flex items-center gap-1 text-xs text-stub-amber hover:text-stub-amber-dim transition-colors"
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium
+                    bg-stub-amber/15 text-stub-amber hover:bg-stub-amber/25 transition-colors"
                 >
-                  <ExternalLink className="w-3 h-3" />
-                  Tickets
+                  🎟️ Tickets
                 </a>
               )}
               <StubItButton onClick={handleStubIt} />

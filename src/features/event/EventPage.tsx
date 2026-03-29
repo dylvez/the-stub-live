@@ -9,6 +9,7 @@ import {
 import { Card, Badge, Button } from '@/components/ui';
 import { StubItButton } from '@/components/ui/StubItButton';
 import { useEvent } from '@/hooks/useEvent';
+import { useTicketLookup } from '@/hooks/useTicketLookup';
 import { isTicketPurchaseUrl, getTicketSourceLinks } from '@/utils/ticketUrl';
 import { generateEventBriefing } from '@/services/ai/briefings';
 import { getArtistDisplayImage } from '@/utils/artistImage';
@@ -106,7 +107,14 @@ export function EventPage(): React.JSX.Element {
     : doorsTimeStr;
 
   const hasSupportActs = supportActNames.length > 0 || event.artistIds.length > 1;
-  const hasTicketUrl = isTicketPurchaseUrl(event.ticketUrl, event.source);
+  const hasOriginalTicketUrl = isTicketPurchaseUrl(event.ticketUrl, event.source);
+  const resolvedTicketUrl = useTicketLookup(
+    artist?.name,
+    venue?.name,
+    eventDate,
+    hasOriginalTicketUrl ? event.ticketUrl : undefined,
+  );
+  const hasTicketUrl = Boolean(resolvedTicketUrl);
   const ticketSources = getTicketSourceLinks(event.externalIds);
   const displayImage = artist
     ? getArtistDisplayImage(artist.images.primary, artist.genres, artist.name, venue?.images?.primary)
@@ -188,6 +196,16 @@ export function EventPage(): React.JSX.Element {
               {artist?.name ?? 'Unknown Artist'}
             </h1>
           </Link>
+          {venue && (
+            <Link
+              to={`/venue/${venue.id}`}
+              className="hover:text-stub-cyan transition-colors"
+            >
+              <p className="text-sm text-stub-text/80 mt-0.5 drop-shadow hover:text-stub-cyan transition-colors flex items-center gap-1">
+                📍 {venue.name}
+              </p>
+            </Link>
+          )}
           {hasSupportActs && (
             <p className="text-sm text-stub-muted mt-1">
               {supportActNames.length > 0
@@ -202,9 +220,9 @@ export function EventPage(): React.JSX.Element {
       <div className="px-4 -mt-2 relative z-10">
         {/* Action Buttons */}
         <div className="flex flex-wrap gap-2 mb-6">
-          {hasTicketUrl && (
+          {hasTicketUrl && resolvedTicketUrl && (
             <a
-              href={event.ticketUrl}
+              href={resolvedTicketUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium

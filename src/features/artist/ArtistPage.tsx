@@ -3,11 +3,11 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import {
-  ArrowLeft, ExternalLink, Share2, Video, Play, Globe,
+  ArrowLeft, ExternalLink, Video, Play,
   Calendar, Clock, MapPin,
 } from 'lucide-react';
 import { BrandedSpinner } from '@/components/ui/BrandedSpinner';
-import { Card, Badge, Button } from '@/components/ui';
+import { Card, Badge } from '@/components/ui';
 import { StubItButton } from '@/components/ui/StubItButton';
 import { useArtist } from '@/hooks/useArtist';
 import { useEvents } from '@/hooks/useEvents';
@@ -137,32 +137,30 @@ export function ArtistPage(): React.JSX.Element {
 
       <div className="px-4 -mt-2 relative z-10">
         {/* Action buttons */}
-        <div className="flex gap-2 mb-6">
-          <Button
-            variant="secondary"
-            icon={<Share2 className="w-4 h-4" />}
+        <div className="flex flex-wrap gap-2 mb-6">
+          <button
             onClick={() => {
               const url = window.location.href;
               if (navigator.share) {
                 navigator.share({ title: artist.name, text: `Check out ${artist.name} on The Stub Live`, url }).catch(() => {});
               } else {
-                navigator.clipboard.writeText(url).then(() => {
-                  // Could show toast — for now, button text feedback
-                }).catch(() => {});
+                navigator.clipboard.writeText(url).catch(() => {});
               }
             }}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium
+              bg-stub-cyan/10 text-stub-cyan hover:bg-stub-cyan/20 transition-colors"
           >
-            Share
-          </Button>
+            📤 Share
+          </button>
           {(artist.externalIds.websiteUrl || briefing?.websiteUrl) && (
             <a
               href={artist.externalIds.websiteUrl || briefing?.websiteUrl || ''}
               target="_blank"
               rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium
+                bg-stub-amber/15 text-stub-amber hover:bg-stub-amber/25 transition-colors"
             >
-              <Button variant="secondary" icon={<Globe className="w-4 h-4" />}>
-                Website
-              </Button>
+              🌐 Website
             </a>
           )}
         </div>
@@ -311,10 +309,10 @@ export function ArtistPage(): React.JSX.Element {
                               target="_blank"
                               rel="noopener noreferrer"
                               onClick={(e) => e.stopPropagation()}
-                              className="inline-flex items-center gap-1 text-xs text-stub-amber hover:text-stub-amber-dim transition-colors"
+                              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium
+                                bg-stub-amber/15 text-stub-amber hover:bg-stub-amber/25 transition-colors"
                             >
-                              <ExternalLink className="w-3 h-3" />
-                              Tickets
+                              🎟️ Tickets
                             </a>
                           )}
                           <StubItButton onClick={() => {

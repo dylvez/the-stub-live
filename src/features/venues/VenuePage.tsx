@@ -2,14 +2,14 @@ import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import {
-  ArrowLeft, MapPin, Users, Calendar, Accessibility, Star,
-  Navigation, ExternalLink, Clock, Phone, Globe, ChevronDown,
+  ArrowLeft, MapPin, Calendar, Accessibility, Star,
+  ExternalLink, Clock, ChevronDown,
   StickyNote, Edit2, Check, X, Video, Play,
 } from 'lucide-react';
 import { BrandedSpinner } from '@/components/ui/BrandedSpinner';
 import { StubItButton } from '@/components/ui/StubItButton';
 import { doc, getDoc, setDoc, Timestamp } from 'firebase/firestore';
-import { Card, Badge, Button } from '@/components/ui';
+import { Card, Badge } from '@/components/ui';
 import { useVenue } from '@/hooks/useVenue';
 import { useEvents } from '@/hooks/useEvents';
 import { useAuth } from '@/contexts/AuthContext';
@@ -225,63 +225,49 @@ export function VenuePage(): React.JSX.Element {
             <MapPin className="w-3.5 h-3.5" />
             {venue.address}, {venue.city}, {venue.state}
           </p>
+          {venue.googleRating && (
+            <p className="text-sm text-stub-text/80 mt-1 flex items-center gap-1.5">
+              <Star className="w-3.5 h-3.5 text-stub-amber fill-stub-amber" />
+              <span className="font-semibold">{venue.googleRating}</span>
+              {venue.googleReviewCount && (
+                <span className="text-stub-muted">({venue.googleReviewCount.toLocaleString()} reviews)</span>
+              )}
+            </p>
+          )}
         </div>
       </div>
 
       <div className="px-4 -mt-2 relative z-10">
-        {/* Quick info */}
-        <div className="grid grid-cols-3 gap-2 mb-6">
-          {venue.googleRating ? (
-            <Card className="text-center">
-              <Star className="w-5 h-5 text-stub-amber mx-auto mb-1" />
-              <div className="text-lg font-display font-bold text-stub-text">{venue.googleRating}</div>
-              <div className="text-[10px] text-stub-muted">{venue.googleReviewCount?.toLocaleString()} reviews</div>
-            </Card>
-          ) : (
-            <Card className="text-center">
-              <Users className="w-5 h-5 text-stub-amber mx-auto mb-1" />
-              <div className="text-lg font-display font-bold text-stub-text">{venue.capacity?.toLocaleString() ?? '—'}</div>
-              <div className="text-[10px] text-stub-muted">Capacity</div>
-            </Card>
-          )}
-          <Card className="text-center">
-            <Calendar className="w-5 h-5 text-stub-cyan mx-auto mb-1" />
-            <div className="text-lg font-display font-bold text-stub-text">{upcomingEvents.length}</div>
-            <div className="text-[10px] text-stub-muted">Upcoming</div>
-          </Card>
-          <Card className="text-center">
-            <Clock className="w-5 h-5 text-stub-coral mx-auto mb-1" />
-            <div className="text-lg font-display font-bold text-stub-text">{allPastEvents.length || '—'}</div>
-            <div className="text-[10px] text-stub-muted">Past Shows</div>
-          </Card>
-        </div>
-
         {/* Action buttons */}
-        <div className="flex gap-2 mb-6">
-          <Button
-            variant="primary"
-            icon={<Navigation className="w-4 h-4" />}
-            onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${venue.lat},${venue.lng}`, '_blank')}
+        <div className="flex flex-wrap gap-2 mb-6">
+          <a
+            href={`https://www.google.com/maps/dir/?api=1&destination=${venue.lat},${venue.lng}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium
+              bg-stub-green/10 text-stub-green hover:bg-stub-green/20 transition-colors"
           >
-            Directions
-          </Button>
+            📍 Directions
+          </a>
           {venue.phone && (
-            <Button
-              variant="secondary"
-              icon={<Phone className="w-4 h-4" />}
-              onClick={() => window.open(`tel:${venue.phone}`, '_self')}
+            <a
+              href={`tel:${venue.phone}`}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium
+                bg-stub-cyan/10 text-stub-cyan hover:bg-stub-cyan/20 transition-colors"
             >
-              Call
-            </Button>
+              📞 Call
+            </a>
           )}
           {venue.website && (
-            <Button
-              variant="secondary"
-              icon={<Globe className="w-4 h-4" />}
-              onClick={() => window.open(venue.website, '_blank')}
+            <a
+              href={venue.website}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium
+                bg-stub-amber/15 text-stub-amber hover:bg-stub-amber/25 transition-colors"
             >
-              Website
-            </Button>
+              🌐 Website
+            </a>
           )}
         </div>
 
@@ -578,10 +564,10 @@ function EventRow({
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
-              className="inline-flex items-center gap-1 text-xs text-stub-amber hover:text-stub-amber-dim transition-colors"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium
+                bg-stub-amber/15 text-stub-amber hover:bg-stub-amber/25 transition-colors"
             >
-              <ExternalLink className="w-3 h-3" />
-              Tickets
+              🎟️ Tickets
             </a>
           )}
           <StubItButton onClick={onStubIt} />
