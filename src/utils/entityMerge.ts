@@ -29,7 +29,6 @@ export function mergeArtistData(existing: ArtistData, incoming: ArtistData): Art
     },
     // Keep richer fields from whichever has them
     aiBriefing: existing.aiBriefing ?? incoming.aiBriefing,
-    spotifyData: existing.spotifyData ?? incoming.spotifyData,
     lastEnriched: existing.lastEnriched ?? incoming.lastEnriched,
   };
 }

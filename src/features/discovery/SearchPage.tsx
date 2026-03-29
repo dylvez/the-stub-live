@@ -102,14 +102,14 @@ export function SearchPage(): React.JSX.Element {
     return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
   }
 
-  // Under the Radar: artists with low or no Spotify popularity
+  // Under the Radar: lesser-known artists with upcoming shows
   const radarArtists = useMemo(() => {
     const results: (ArtistData & { eventCount: number; nextDate: Date | null })[] = [];
     const seen = new Set<string>();
     for (const [id, artist] of allArtists) {
       if (seen.has(id)) continue;
-      const pop = artist.spotifyData?.popularity;
-      if (pop == null || pop < 30) {
+      // Show all artists as potential "Under the Radar" discoveries
+      {
         const eventCount = allEvents.filter((e) => e.artistIds.includes(id)).length;
         if (eventCount > 0) {
           results.push({ ...artist, eventCount, nextDate: getNextEventDate(id) });

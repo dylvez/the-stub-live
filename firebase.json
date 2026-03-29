@@ -22,20 +22,6 @@
         }
       },
       {
-        "source": "/api/spotify-auth/**",
-        "function": {
-          "functionId": "spotifyAuthProxy",
-          "region": "us-east1"
-        }
-      },
-      {
-        "source": "/api/spotify/**",
-        "function": {
-          "functionId": "spotifyProxy",
-          "region": "us-east1"
-        }
-      },
-      {
         "source": "**",
         "destination": "/index.html"
       }

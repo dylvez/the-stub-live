@@ -43,16 +43,6 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      '/api/spotify-auth': {
-        target: 'https://accounts.spotify.com',
-        changeOrigin: true,
-        rewrite: (p) => p.replace(/^\/api\/spotify-auth/, ''),
-      },
-      '/api/spotify': {
-        target: 'https://api.spotify.com',
-        changeOrigin: true,
-        rewrite: (p) => p.replace(/^\/api\/spotify/, ''),
-      },
       '/api/jambase': {
         target: 'https://www.jambase.com',
         changeOrigin: true,

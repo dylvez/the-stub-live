@@ -1,8 +1,7 @@
-export { apiFetch, apiKeys, isTicketmasterConfigured, isBandsintownConfigured, isSpotifyConfigured, isSetlistFmConfigured, isLastFmConfigured, isYoutubeConfigured, isEventbriteConfigured, isSeatGeekConfigured, isJambaseConfigured, DEFAULT_LOCATION } from './config';
+export { apiFetch, apiKeys, isTicketmasterConfigured, isBandsintownConfigured, isSetlistFmConfigured, isLastFmConfigured, isYoutubeConfigured, isEventbriteConfigured, isSeatGeekConfigured, isJambaseConfigured, DEFAULT_LOCATION } from './config';
 export { cacheGet, cacheSet, memGet, memSet, CacheTTL } from './cache';
 export { searchEvents, parseTmEvents, mapTmEventToEventData, mapTmAttractionToArtistData, mapTmVenueToVenueData } from './ticketmaster';
 export { getArtistEvents } from './bandsintown';
-export { getSpotifyArtist, getSpotifyTopTracks, getSpotifyAudioFeatures } from './spotify';
 export { getArtistInfo } from './lastfm';
 export { searchLivePerformances } from './youtube';
 export { searchArtist } from './musicbrainz';

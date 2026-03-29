@@ -204,14 +204,6 @@ function parseGenres(classifications?: TmClassification[]): string[] {
   return Array.from(genres);
 }
 
-function extractSpotifyId(links?: TmAttraction['externalLinks']): string | undefined {
-  const url = links?.spotify?.[0]?.url;
-  if (!url) return undefined;
-  // Parse artist ID from URL: https://open.spotify.com/artist/XXXXX
-  const match = url.match(/artist\/([a-zA-Z0-9]+)/);
-  return match?.[1];
-}
-
 function parseDateTime(dates?: TmDates): Date {
   if (dates?.start?.dateTime) {
     return new Date(dates.start.dateTime);
@@ -283,7 +275,6 @@ export function mapTmAttractionToArtistData(tm: TmAttraction): ArtistData {
       gallery: (tm.images ?? []).map((i) => i.url).filter((u) => !!sanitizeArtistImage(u)).slice(0, 5),
     },
     externalIds: {
-      spotifyId: extractSpotifyId(tm.externalLinks),
       youtubeChannelId: tm.externalLinks?.youtube?.[0]?.url,
       instagramHandle: tm.externalLinks?.instagram?.[0]?.url,
       websiteUrl: tm.externalLinks?.homepage?.[0]?.url,

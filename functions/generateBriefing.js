@@ -26,9 +26,7 @@ function buildUserPrompt(params) {
     name,
     genres = [],
     tags = [],
-    spotifyPopularity,
     lastfmBio,
-    topTrackNames = [],
     listenerCount,
   } = params;
 
@@ -36,9 +34,7 @@ function buildUserPrompt(params) {
 
   if (genres.length > 0) lines.push(`Genres: ${genres.join(", ")}`);
   if (tags.length > 0) lines.push(`Tags: ${tags.join(", ")}`);
-  if (spotifyPopularity != null) lines.push(`Spotify popularity score: ${spotifyPopularity}/100`);
   if (listenerCount != null) lines.push(`Last.fm monthly listeners: ${listenerCount.toLocaleString()}`);
-  if (topTrackNames.length > 0) lines.push(`Top tracks: ${topTrackNames.slice(0, 5).join(", ")}`);
   if (lastfmBio) lines.push(`Bio excerpt: ${lastfmBio.slice(0, 500)}`);
 
   lines.push("\nWrite a concert-goer briefing as described in the system prompt.");

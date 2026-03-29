@@ -16,7 +16,6 @@ const SOCIAL_PLATFORMS = [
   { key: 'facebook' as const, label: 'Facebook', prefix: 'facebook.com/', iconPath: '/images/platform-facebook.svg', urlBase: 'https://facebook.com/' },
   { key: 'tiktok' as const, label: 'TikTok', prefix: 'tiktok.com/@', iconPath: '/images/platform-tiktok.svg', urlBase: 'https://tiktok.com/@' },
   { key: 'threads' as const, label: 'Threads', prefix: 'threads.net/@', iconPath: '/images/platform-threads.svg', urlBase: 'https://threads.net/@' },
-  { key: 'spotify' as const, label: 'Spotify', prefix: 'open.spotify.com/', iconPath: '/images/platform-spotify.svg', urlBase: 'https://open.spotify.com/user/' },
   { key: 'youtube' as const, label: 'YouTube', prefix: 'youtube.com/@', iconPath: '/images/platform-youtube.svg', urlBase: 'https://youtube.com/@' },
 ] as const;
 

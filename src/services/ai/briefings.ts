@@ -10,9 +10,7 @@ export interface BriefingParams {
   name: string;
   genres: string[];
   tags: string[];
-  spotifyPopularity?: number;
   lastfmBio?: string;
-  topTrackNames?: string[];
   listenerCount?: number;
   // Discogs enrichment
   discogsBio?: string;

@@ -44,7 +44,6 @@ async function ensureUserDoc(firebaseUser: User): Promise<UserData> {
     bio: '',
     location: { city: 'Richmond', state: 'VA', lat: 37.5407, lng: -77.436, radiusMiles: 50 },
     musicPreferences: { genres: [], moods: [], freeformDescription: '' },
-    spotifyConnected: false,
     appleMusicConnected: false,
     stats: { totalShows: 0, totalVenues: 0, totalArtists: 0, memberSince: now },
     following: [],

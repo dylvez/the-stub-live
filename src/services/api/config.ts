@@ -4,10 +4,6 @@ export const apiKeys = {
   ticketmaster: import.meta.env.VITE_TICKETMASTER_API_KEY as string | undefined,
   bandsintown: import.meta.env.VITE_BANDSINTOWN_API_KEY as string | undefined,
   seatgeek: import.meta.env.VITE_SEATGEEK_CLIENT_ID as string | undefined,
-  spotify: {
-    clientId: import.meta.env.VITE_SPOTIFY_CLIENT_ID as string | undefined,
-    clientSecret: import.meta.env.VITE_SPOTIFY_CLIENT_SECRET as string | undefined,
-  },
   setlistfm: import.meta.env.VITE_SETLISTFM_API_KEY as string | undefined,
   lastfm: import.meta.env.VITE_LASTFM_API_KEY as string | undefined,
   youtube: import.meta.env.VITE_YOUTUBE_API_KEY as string | undefined,
@@ -21,7 +17,6 @@ export const apiKeys = {
 export const isTicketmasterConfigured = !!apiKeys.ticketmaster;
 // Bandsintown uses a public app_id (not a secret) — always available
 export const isBandsintownConfigured = true;
-export const isSpotifyConfigured = !!apiKeys.spotify.clientId && !!apiKeys.spotify.clientSecret;
 export const isSetlistFmConfigured = !!apiKeys.setlistfm;
 export const isLastFmConfigured = !!apiKeys.lastfm;
 export const isYoutubeConfigured = !!apiKeys.youtube;

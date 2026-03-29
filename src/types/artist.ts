@@ -6,7 +6,6 @@ export interface ArtistImages {
 }
 
 export interface ArtistExternalIds {
-  spotifyId?: string;
   musicbrainzId?: string;
   bandsintown?: string;
   songkickId?: string;
@@ -30,28 +29,6 @@ export interface AiBriefing {
   modelVersion: string;
 }
 
-export interface SpotifyTrack {
-  id: string;
-  name: string;
-  previewUrl: string | null;
-  albumName: string;
-  albumImageUrl: string;
-  durationMs: number;
-}
-
-export interface SpotifyAudioFeatures {
-  energy: number;
-  valence: number;
-  danceability: number;
-  instrumentalness: number;
-}
-
-export interface SpotifyData {
-  popularity: number;
-  topTracks: SpotifyTrack[];
-  audioFeatures: SpotifyAudioFeatures;
-}
-
 export interface ArtistData {
   id: string;
   name: string;
@@ -61,6 +38,5 @@ export interface ArtistData {
   images: ArtistImages;
   externalIds: ArtistExternalIds;
   aiBriefing?: AiBriefing;
-  spotifyData?: SpotifyData;
   lastEnriched?: Timestamp;
 }

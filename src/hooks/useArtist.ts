@@ -1,18 +1,16 @@
 import { useState, useEffect } from 'react';
-import { isTicketmasterConfigured, isSpotifyConfigured, isLastFmConfigured, isDiscogsConfigured, isGeniusConfigured } from '@/services/api/config';
+import { isTicketmasterConfigured, isLastFmConfigured, isDiscogsConfigured, isGeniusConfigured } from '@/services/api/config';
 import { cacheGet, cacheSet, memGet, CacheTTL } from '@/services/api/cache';
-import { getSpotifyArtist, getSpotifyTopTracks } from '@/services/api/spotify';
 import { getArtistInfo, type LastFmArtistInfo } from '@/services/api/lastfm';
 import { searchArtist as searchMbArtist, type MusicBrainzArtist } from '@/services/api/musicbrainz';
 import { searchDiscogsArtist } from '@/services/api/discogs';
 import { searchGeniusArtist, getGeniusArtistTopSongs } from '@/services/api/genius';
-import type { ArtistData, SpotifyTrack } from '@/types';
+import type { ArtistData } from '@/types';
 import type { DiscogsArtistInfo } from '@/types/discogs';
 import type { GeniusArtistInfo } from '@/types/genius';
 
 export interface UseArtistReturn {
   artist: ArtistData | null;
-  spotifyTracks: SpotifyTrack[];
   lastfmInfo: LastFmArtistInfo | null;
   mbArtist: MusicBrainzArtist | null;
   discogsInfo: DiscogsArtistInfo | null;
@@ -23,7 +21,6 @@ export interface UseArtistReturn {
 
 export function useArtist(id: string | undefined): UseArtistReturn {
   const [artist, setArtist] = useState<ArtistData | null>(null);
-  const [spotifyTracks, setSpotifyTracks] = useState<SpotifyTrack[]>([]);
   const [lastfmInfo, setLastfmInfo] = useState<LastFmArtistInfo | null>(null);
   const [mbArtist, setMbArtist] = useState<MusicBrainzArtist | null>(null);
   const [discogsInfo, setDiscogsInfo] = useState<DiscogsArtistInfo | null>(null);
@@ -45,8 +42,6 @@ export function useArtist(id: string | undefined): UseArtistReturn {
       const cached = cacheGet<ArtistData>(`artist:enriched:${artistId}`, true);
       if (cached) {
         setArtist(cached);
-        const cachedTracks = cacheGet<SpotifyTrack[]>(`artist:tracks:${artistId}`, true);
-        if (cachedTracks) setSpotifyTracks(cachedTracks);
         const cachedLfm = cacheGet<LastFmArtistInfo>(`artist:lastfm:${artistId}`, true);
         if (cachedLfm) setLastfmInfo(cachedLfm);
         const cachedMb = cacheGet<MusicBrainzArtist>(`artist:mb:${artistId}`, true);
@@ -148,49 +143,6 @@ export function useArtist(id: string | undefined): UseArtistReturn {
       let discogsData: DiscogsArtistInfo | null = null; // captured for AI briefing
       let geniusData: GeniusArtistInfo | null = null; // captured for AI briefing
       let geniusSongDescs: string[] = []; // captured for AI briefing
-
-      // Spotify enrichment
-      if (isSpotifyConfigured && baseArtist.externalIds?.spotifyId) {
-        const spotifyId = baseArtist.externalIds.spotifyId;
-        enrichmentPromises.push(
-          (async () => {
-            try {
-              const [spArtist, tracks] = await Promise.all([
-                getSpotifyArtist(spotifyId),
-                getSpotifyTopTracks(spotifyId),
-              ]);
-
-              if (cancelled) return;
-
-              if (spArtist) {
-                const enriched: ArtistData = {
-                  ...baseArtist!,
-                  genres: spArtist.genres.length > 0 ? spArtist.genres : baseArtist!.genres,
-                  images: {
-                    primary: spArtist.images[0]?.url ?? baseArtist!.images.primary,
-                    gallery: [
-                      ...spArtist.images.map((i) => i.url),
-                      ...baseArtist!.images.gallery,
-                    ],
-                  },
-                  spotifyData: {
-                    popularity: spArtist.popularity,
-                    topTracks: tracks,
-                    audioFeatures: { energy: 0, valence: 0, danceability: 0, instrumentalness: 0 },
-                  },
-                };
-                setArtist(enriched);
-                cacheSet(`artist:enriched:${artistId}`, enriched, CacheTTL.ARTIST, true);
-              }
-
-              if (tracks.length > 0) {
-                setSpotifyTracks(tracks);
-                cacheSet(`artist:tracks:${artistId}`, tracks, CacheTTL.ARTIST, true);
-              }
-            } catch { /* Spotify enrichment is best-effort */ }
-          })()
-        );
-      }
 
       // Last.fm enrichment
       if (isLastFmConfigured) {
@@ -306,8 +258,6 @@ export function useArtist(id: string | undefined): UseArtistReturn {
               name: currentArtist.name,
               genres: currentArtist.genres,
               tags: currentArtist.tags,
-              spotifyPopularity: currentArtist.spotifyData?.popularity,
-              topTrackNames: currentArtist.spotifyData?.topTracks?.map((t) => t.name),
               lastfmBio: lfmInfo?.bio,
               listenerCount: lfmInfo?.listeners,
               // Discogs context
@@ -338,5 +288,5 @@ export function useArtist(id: string | undefined): UseArtistReturn {
     return () => { cancelled = true; };
   }, [id]);
 
-  return { artist, spotifyTracks, lastfmInfo, mbArtist, discogsInfo, geniusInfo, isLoading, error };
+  return { artist, lastfmInfo, mbArtist, discogsInfo, geniusInfo, isLoading, error };
 }

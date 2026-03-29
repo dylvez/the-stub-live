@@ -9,34 +9,46 @@ if (getApps().length === 0) {
 
 const perplexityKey = defineSecret("PERPLEXITY_API_KEY");
 
-const SYSTEM_PROMPT = `You are a music image researcher. Your ONLY job is to find a working direct image URL for a music artist.
+/**
+ * Pick the best image from Perplexity's images array.
+ * Prefers larger images and known reliable CDNs.
+ */
+function pickBestImage(images) {
+  if (!Array.isArray(images) || images.length === 0) return null;
 
-Search aggressively across ALL of these sources:
-1. Wikipedia / Wikimedia Commons (upload.wikimedia.org) — most artists have a photo here
-2. Last.fm artist pages (lastfm.freetls.fastly.net or similar CDN)
-3. Bandcamp artist/album art
-4. Music festival photography
-5. Music publication press photos (Pitchfork, NME, Rolling Stone, etc.)
-6. Official artist websites and labels
-7. Discogs artist photos
-8. MusicBrainz cover art archive
+  // Score each image
+  const scored = images.map((img) => {
+    let score = 0;
+    const url = (img.image_url || "").toLowerCase();
+    const w = img.width || 0;
+    const h = img.height || 0;
 
-CRITICAL RULES:
-- You MUST return a direct image file URL, not a webpage URL
-- Valid URLs end in .jpg, .jpeg, .png, .webp, or are from known image CDNs (upload.wikimedia.org, lastfm.freetls.fastly.net, i.scdn.co, f4.bcbits.com, etc.)
-- Do NOT return social media page URLs (instagram.com, facebook.com, twitter.com)
-- Do NOT return Google Image search result URLs
-- Try VERY hard to find something — even album artwork or a band logo is better than null
+    // Prefer larger images
+    score += Math.min(w * h, 2000000) / 10000; // cap at ~2MP
 
-Return ONLY a JSON object:
-{"imageUrl": "<direct_image_url>", "source": "<source_name>"}
+    // Prefer known reliable CDNs
+    if (url.includes("upload.wikimedia.org")) score += 50;
+    if (url.includes("lastfm")) score += 40;
+    if (url.includes("bcbits.com")) score += 30; // Bandcamp
+    if (url.includes("discogs")) score += 30;
 
-Only return null if you truly cannot find ANY image of this artist anywhere on the internet.
-Return raw JSON only. No explanation, no markdown fences.`;
+    // Penalize tiny images (icons, thumbnails)
+    if (w > 0 && w < 150) score -= 50;
+    if (h > 0 && h < 150) score -= 50;
+
+    // Penalize social media CDNs (often restricted/ephemeral)
+    if (url.includes("instagram") || url.includes("fbcdn")) score -= 30;
+
+    return { ...img, score };
+  });
+
+  scored.sort((a, b) => b.score - a.score);
+  return scored[0];
+}
 
 /**
- * Dedicated artist image search via Perplexity.
- * Called as a fallback when no image is available from Spotify/Bandsintown/Ticketmaster.
+ * Dedicated artist image search via Perplexity's return_images feature.
+ * Uses the API's built-in image search instead of asking the model to guess URLs.
  */
 exports.searchArtistImage = onCall(
   {
@@ -54,7 +66,7 @@ exports.searchArtistImage = onCall(
 
     const db = getFirestore();
 
-    // Check cache first (stored alongside briefings)
+    // Check cache first
     if (artistId) {
       const cacheDoc = await db.collection("artistImages").doc(artistId).get();
       if (cacheDoc.exists) {
@@ -76,6 +88,7 @@ exports.searchArtistImage = onCall(
         throw new HttpsError("failed-precondition", "PERPLEXITY_API_KEY secret not configured");
       }
 
+      // Use return_images: true to get structured image results from Perplexity
       const response = await fetch("https://api.perplexity.ai/chat/completions", {
         method: "POST",
         headers: {
@@ -84,11 +97,18 @@ exports.searchArtistImage = onCall(
         },
         body: JSON.stringify({
           model: "sonar-pro",
-          max_tokens: 256,
+          max_tokens: 128,
           temperature: 0.1,
+          return_images: true,
           messages: [
-            { role: "system", content: SYSTEM_PROMPT },
-            { role: "user", content: `Find a direct image URL (photo or press image) for the music artist "${artistName}". Search Wikipedia, Last.fm, Bandcamp, Discogs, and music publications. Return the best direct image file URL you can find.` },
+            {
+              role: "system",
+              content: "You are a music image researcher. Find photos of the requested music artist.",
+            },
+            {
+              role: "user",
+              content: `${artistName} artist images press photos band photo`,
+            },
           ],
         }),
       });
@@ -99,41 +119,26 @@ exports.searchArtistImage = onCall(
       }
 
       const aiData = await response.json();
-      let jsonStr = aiData.choices?.[0]?.message?.content ?? "";
 
-      if (jsonStr.includes("```")) {
-        jsonStr = jsonStr.replace(/^```(?:json)?\n?/, "").replace(/\n?```$/, "");
-      }
-      jsonStr = jsonStr.trim();
+      // Extract images from the structured images array
+      const images = aiData.images || [];
+      console.log(`searchArtistImage [${artistName}]: got ${images.length} images from Perplexity`);
 
-      console.log(`searchArtistImage [${artistName}] raw response:`, jsonStr.substring(0, 500));
+      const best = pickBestImage(images);
+      const imageUrl = best ? best.image_url : null;
+      const source = best ? (best.origin_url || "Perplexity") : null;
 
-      const parsed = JSON.parse(jsonStr);
-      let imageUrl = parsed.imageUrl || null;
-      console.log(`searchArtistImage [${artistName}] candidate:`, imageUrl ? imageUrl.substring(0, 200) : "null");
-
-      // Validate the image URL actually loads
       if (imageUrl) {
-        try {
-          const imgResponse = await fetch(imageUrl, { method: "HEAD", signal: AbortSignal.timeout(8000) });
-          const contentType = imgResponse.headers.get("content-type") || "";
-          if (!imgResponse.ok || !contentType.startsWith("image/")) {
-            console.log(`searchArtistImage [${artistName}] URL failed validation: status=${imgResponse.status} type=${contentType}`);
-            imageUrl = null;
-          } else {
-            console.log(`searchArtistImage [${artistName}] URL validated: ${contentType}`);
-          }
-        } catch (validationErr) {
-          console.log(`searchArtistImage [${artistName}] URL validation error:`, validationErr.message);
-          imageUrl = null;
-        }
+        console.log(`searchArtistImage [${artistName}]: selected ${imageUrl.substring(0, 150)} (${best.width}x${best.height})`);
+      } else {
+        console.log(`searchArtistImage [${artistName}]: no suitable images found`);
       }
 
       // Cache the result
       if (artistId) {
         await db.collection("artistImages").doc(artistId).set({
           imageUrl,
-          source: parsed.source || null,
+          source,
           artistName,
           searchedAt: FieldValue.serverTimestamp(),
         });
@@ -142,7 +147,6 @@ exports.searchArtistImage = onCall(
       return { imageUrl, cached: false };
     } catch (err) {
       console.error("searchArtistImage error:", err);
-      // Don't throw — just return null so the UI can use its fallback
       return { imageUrl: null, cached: false };
     }
   }
