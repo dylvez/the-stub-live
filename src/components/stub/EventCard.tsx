@@ -4,7 +4,7 @@ import { MapPin, Calendar, Clock, ExternalLink, Users } from 'lucide-react';
 import { Badge } from '@/components/ui';
 import { StubItButton } from '@/components/ui/StubItButton';
 import { getArtistDisplayImage } from '@/utils/artistImage';
-import { isTicketPurchaseUrl, getTicketPlatformName } from '@/utils/ticketUrl';
+import { isTicketPurchaseUrl } from '@/utils/ticketUrl';
 import type { EventData, ArtistData, VenueData } from '@/types';
 
 /** Map genre keywords to accent colors for visual variety */
@@ -250,7 +250,7 @@ export function EventCard({
                   className="inline-flex items-center gap-1 text-xs text-stub-amber hover:text-stub-amber-dim transition-colors"
                 >
                   <ExternalLink className="w-3 h-3" />
-                  {getTicketPlatformName(ticketUrl)}
+                  Tickets
                 </a>
               )}
               <StubItButton onClick={handleStubIt} />

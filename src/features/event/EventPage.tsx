@@ -9,7 +9,7 @@ import {
 import { Card, Badge, Button } from '@/components/ui';
 import { StubItButton } from '@/components/ui/StubItButton';
 import { useEvent } from '@/hooks/useEvent';
-import { isTicketPurchaseUrl, getTicketPlatformName, getTicketSourceLinks } from '@/utils/ticketUrl';
+import { isTicketPurchaseUrl, getTicketSourceLinks } from '@/utils/ticketUrl';
 import { generateEventBriefing } from '@/services/ai/briefings';
 import { getArtistDisplayImage } from '@/utils/artistImage';
 import type { AiEventBriefing } from '@/types';
@@ -206,7 +206,7 @@ export function EventPage(): React.JSX.Element {
                 bg-stub-amber/15 text-stub-amber hover:bg-stub-amber/25 transition-colors"
             >
               <Ticket className="w-4 h-4" />
-              {getTicketPlatformName(event.ticketUrl!)}
+              Tickets
             </a>
           )}
           <StubItButton onClick={handleStubIt} />
