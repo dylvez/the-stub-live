@@ -71,6 +71,16 @@ export function EventPage(): React.JSX.Element {
     }).catch(() => {}).finally(() => setBriefingLoading(false));
   }, [event?.id, artist?.name, venue?.name]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Ticket URL lookup — must be before early returns (Rules of Hooks)
+  const hasOriginalTicketUrl = event ? isTicketPurchaseUrl(event.ticketUrl, event.source) : false;
+  const eventDateForLookup = event ? toDate(event.date) : undefined;
+  const resolvedTicketUrl = useTicketLookup(
+    artist?.name,
+    venue?.name,
+    eventDateForLookup,
+    hasOriginalTicketUrl ? event?.ticketUrl : undefined,
+  );
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -107,13 +117,6 @@ export function EventPage(): React.JSX.Element {
     : doorsTimeStr;
 
   const hasSupportActs = supportActNames.length > 0 || event.artistIds.length > 1;
-  const hasOriginalTicketUrl = isTicketPurchaseUrl(event.ticketUrl, event.source);
-  const resolvedTicketUrl = useTicketLookup(
-    artist?.name,
-    venue?.name,
-    eventDate,
-    hasOriginalTicketUrl ? event.ticketUrl : undefined,
-  );
   const hasTicketUrl = Boolean(resolvedTicketUrl);
   const ticketSources = getTicketSourceLinks(event.externalIds);
   const displayImage = artist
