@@ -104,4 +104,25 @@ export async function generateEventBriefing(
   }
 }
 
+const searchArtistImageFn = httpsCallable(functions, 'searchArtistImage');
+
+interface ImageSearchResponse {
+  imageUrl?: string | null;
+  cached?: boolean;
+}
+
+export async function searchArtistImage(
+  artistName: string,
+  artistId: string,
+): Promise<string | null> {
+  try {
+    const result = await searchArtistImageFn({ artistName, artistId });
+    const data = result.data as ImageSearchResponse;
+    return data.imageUrl ?? null;
+  } catch (err) {
+    console.warn('Artist image search failed:', err);
+    return null;
+  }
+}
+
 export const isClaudeConfigured = true;

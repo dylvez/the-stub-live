@@ -11,7 +11,7 @@ import { Card, Badge } from '@/components/ui';
 import { StubItButton } from '@/components/ui/StubItButton';
 import { useArtist } from '@/hooks/useArtist';
 import { useEvents } from '@/hooks/useEvents';
-import { generateArtistBriefing } from '@/services/ai/briefings';
+import { generateArtistBriefing, searchArtistImage } from '@/services/ai/briefings';
 import type { AiBriefing } from '@/types';
 import { formatSetlistDate } from '@/utils/setlistToEvent';
 import { searchLivePerformances, type YouTubeVideo } from '@/services/api/youtube';
@@ -30,6 +30,8 @@ export function ArtistPage(): React.JSX.Element {
   const [videos, setVideos] = useState<YouTubeVideo[]>([]);
   const [setlists, setSetlists] = useState<SetlistResult[]>([]);
   const [briefing, setBriefing] = useState<AiBriefing | null>(artist?.aiBriefing ?? null);
+  const [searchedImageUrl, setSearchedImageUrl] = useState<string | null>(null);
+  const [imageLoadFailed, setImageLoadFailed] = useState(false);
 
   // Fetch YouTube videos when YouTube tab is selected
   useEffect(() => {
@@ -57,6 +59,20 @@ export function ArtistPage(): React.JSX.Element {
       }).catch(() => {});
     }
   }, [artist?.name, id]);
+
+  // Search for artist image via Perplexity if no image available from APIs or briefing
+  useEffect(() => {
+    if (!artist || !id) return;
+    // Already have an image from primary sources or briefing
+    if (artist.images.primary || briefing?.imageUrl || searchedImageUrl) return;
+    // Wait until briefing has had a chance to load (it may provide imageUrl)
+    // briefing === null means it hasn't loaded yet; once it loads (even without imageUrl), trigger search
+    if (!briefing) return;
+
+    searchArtistImage(artist.name, id)
+      .then((url) => { if (url) setSearchedImageUrl(url); })
+      .catch(() => {});
+  }, [artist?.name, id, briefing, searchedImageUrl]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (artistLoading) {
     return (
@@ -104,8 +120,13 @@ export function ArtistPage(): React.JSX.Element {
       </Helmet>
       {/* Hero */}
       <div className="relative h-64 sm:h-80 overflow-hidden">
-        {(artist.images.primary || briefing?.imageUrl) ? (
-          <img src={artist.images.primary || briefing?.imageUrl || ''} alt={artist.name} className="w-full h-full object-cover" />
+        {!imageLoadFailed && (artist.images.primary || briefing?.imageUrl || searchedImageUrl) ? (
+          <img
+            src={artist.images.primary || briefing?.imageUrl || searchedImageUrl || ''}
+            alt={artist.name}
+            className="w-full h-full object-cover"
+            onError={() => setImageLoadFailed(true)}
+          />
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-stub-amber/30 to-stub-coral/30 flex items-center justify-center">
             <span className="text-6xl font-display font-bold text-stub-amber/30">{artist.name.charAt(0)}</span>
