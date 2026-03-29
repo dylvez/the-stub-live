@@ -13,7 +13,7 @@ export function StubItButton({ onClick }: StubItButtonProps): React.JSX.Element 
       className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium
         bg-stub-violet/10 text-stub-violet hover:bg-stub-violet/20 transition-colors"
     >
-      Stub It
+      🎫 Stub It
     </button>
   );
 }
