@@ -4,7 +4,7 @@ import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import {
   ArrowLeft, ExternalLink, Video, Play,
-  Calendar, Clock, MapPin,
+  Calendar, Clock, MapPin, Share2, Globe, Ticket,
 } from 'lucide-react';
 import { BrandedSpinner } from '@/components/ui/BrandedSpinner';
 import { Card, Badge } from '@/components/ui';
@@ -150,7 +150,7 @@ export function ArtistPage(): React.JSX.Element {
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium
               bg-stub-cyan/10 text-stub-cyan hover:bg-stub-cyan/20 transition-colors"
           >
-            📤 Share
+            <Share2 className="w-4 h-4" /> Share
           </button>
           {(artist.externalIds.websiteUrl || briefing?.websiteUrl) && (
             <a
@@ -160,7 +160,7 @@ export function ArtistPage(): React.JSX.Element {
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium
                 bg-stub-amber/15 text-stub-amber hover:bg-stub-amber/25 transition-colors"
             >
-              🌐 Website
+              <Globe className="w-4 h-4" /> Website
             </a>
           )}
         </div>
@@ -312,7 +312,7 @@ export function ArtistPage(): React.JSX.Element {
                               className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium
                                 bg-stub-amber/15 text-stub-amber hover:bg-stub-amber/25 transition-colors"
                             >
-                              🎟️ Tickets
+                              <Ticket className="w-4 h-4" /> Tickets
                             </a>
                           )}
                           <StubItButton onClick={() => {

@@ -3,8 +3,9 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import {
   ArrowLeft, MapPin, Calendar, Accessibility, Star,
-  ExternalLink, Clock, ChevronDown,
+  ExternalLink, Clock, ChevronDown, Lightbulb, Music,
   StickyNote, Edit2, Check, X, Video, Play,
+  Navigation, Phone, Globe, Ticket,
 } from 'lucide-react';
 import { BrandedSpinner } from '@/components/ui/BrandedSpinner';
 import { StubItButton } from '@/components/ui/StubItButton';
@@ -19,6 +20,7 @@ import { memScanByPrefix } from '@/services/api/cache';
 import { searchSetlistsByVenue } from '@/services/api/setlistfm';
 import { searchLivePerformances, type YouTubeVideo } from '@/services/api/youtube';
 import { convertSetlistsToEvents } from '@/utils/setlistToEvent';
+import { generateVenueBriefing, type VenueBriefing } from '@/services/ai/venueBriefing';
 import type { EventData, ArtistData } from '@/types';
 
 export function VenuePage(): React.JSX.Element {
@@ -86,6 +88,19 @@ export function VenuePage(): React.JSX.Element {
   type ShowsTab = 'upcoming' | 'recent' | 'youtube';
   const [showsTab, setShowsTab] = useState<ShowsTab>('upcoming');
   const [videos, setVideos] = useState<YouTubeVideo[]>([]);
+
+  // AI venue briefing
+  const [venueBriefing, setVenueBriefing] = useState<VenueBriefing | null>(null);
+  const [briefingLoading, setBriefingLoading] = useState(false);
+
+  useEffect(() => {
+    if (!venue || venueBriefing) return;
+    setBriefingLoading(true);
+    generateVenueBriefing(venue.name, venue.city, venue.state, venue.venueType, venue.editorialSummary)
+      .then((result) => { if (result) setVenueBriefing(result); })
+      .catch(() => {})
+      .finally(() => setBriefingLoading(false));
+  }, [venue?.name]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Personal venue notes
   const [venueNote, setVenueNote] = useState('');
@@ -247,7 +262,7 @@ export function VenuePage(): React.JSX.Element {
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium
               bg-stub-green/10 text-stub-green hover:bg-stub-green/20 transition-colors"
           >
-            📍 Directions
+            <Navigation className="w-4 h-4" /> Directions
           </a>
           {venue.phone && (
             <a
@@ -255,7 +270,7 @@ export function VenuePage(): React.JSX.Element {
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium
                 bg-stub-cyan/10 text-stub-cyan hover:bg-stub-cyan/20 transition-colors"
             >
-              📞 Call
+              <Phone className="w-4 h-4" /> Call
             </a>
           )}
           {venue.website && (
@@ -266,16 +281,60 @@ export function VenuePage(): React.JSX.Element {
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium
                 bg-stub-amber/15 text-stub-amber hover:bg-stub-amber/25 transition-colors"
             >
-              🌐 Website
+              <Globe className="w-4 h-4" /> Website
             </a>
           )}
         </div>
 
-        {/* Editorial summary */}
-        {venue.editorialSummary && (
-          <section className="mb-6">
-            <p className="text-sm text-stub-muted leading-relaxed">{venue.editorialSummary}</p>
-          </section>
+        {/* AI Venue Overview */}
+        {(venueBriefing || briefingLoading) && (
+          <Card glow="amber" className="mb-6">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-6 h-6 rounded-full bg-stub-amber/20 flex items-center justify-center">
+                <span className="text-xs">✦</span>
+              </div>
+              <span className="text-xs font-mono text-stub-amber uppercase tracking-wider">
+                Venue Overview
+              </span>
+            </div>
+
+            {venueBriefing ? (
+              <div className="space-y-4">
+                <p className="text-sm text-stub-text leading-relaxed">{venueBriefing.overview}</p>
+
+                <div>
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <Music className="w-3.5 h-3.5 text-stub-cyan" />
+                    <span className="text-xs font-medium text-stub-cyan uppercase tracking-wider">Atmosphere</span>
+                  </div>
+                  <p className="text-sm text-stub-muted leading-relaxed">{venueBriefing.atmosphere}</p>
+                </div>
+
+                {venueBriefing.tips.length > 0 && (
+                  <div>
+                    <div className="flex items-center gap-1.5 mb-2">
+                      <Lightbulb className="w-3.5 h-3.5 text-stub-amber" />
+                      <span className="text-xs font-medium text-stub-amber uppercase tracking-wider">Tips</span>
+                    </div>
+                    <ul className="space-y-1.5">
+                      {venueBriefing.tips.map((tip, i) => (
+                        <li key={i} className="text-sm text-stub-muted flex items-start gap-2">
+                          <span className="text-stub-amber/60 mt-0.5">•</span>
+                          {tip}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <div className="h-4 bg-stub-border/40 rounded animate-pulse w-3/4" />
+                <div className="h-4 bg-stub-border/40 rounded animate-pulse w-full" />
+                <div className="h-4 bg-stub-border/40 rounded animate-pulse w-2/3" />
+              </div>
+            )}
+          </Card>
         )}
 
         {/* Personal venue notes */}
@@ -567,7 +626,7 @@ function EventRow({
               className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium
                 bg-stub-amber/15 text-stub-amber hover:bg-stub-amber/25 transition-colors"
             >
-              🎟️ Tickets
+              <Ticket className="w-4 h-4" /> Tickets
             </a>
           )}
           <StubItButton onClick={onStubIt} />

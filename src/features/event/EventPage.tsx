@@ -4,7 +4,7 @@ import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import {
   ArrowLeft, ExternalLink, MapPin, Calendar, Clock, Globe,
-  Ticket, Music, Lightbulb, Headphones,
+  Ticket, Music, Lightbulb, Headphones, Share2, Navigation,
 } from 'lucide-react';
 import { Card, Badge, Button } from '@/components/ui';
 import { StubItButton } from '@/components/ui/StubItButton';
@@ -205,7 +205,7 @@ export function EventPage(): React.JSX.Element {
               className="hover:text-stub-cyan transition-colors"
             >
               <p className="text-sm text-stub-text/80 mt-0.5 drop-shadow hover:text-stub-cyan transition-colors flex items-center gap-1">
-                📍 {venue.name}
+                <MapPin className="w-3.5 h-3.5" /> {venue.name}
               </p>
             </Link>
           )}
@@ -231,7 +231,7 @@ export function EventPage(): React.JSX.Element {
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium
                 bg-stub-amber/15 text-stub-amber hover:bg-stub-amber/25 transition-colors"
             >
-              🎟️ Tickets
+              <Ticket className="w-4 h-4" /> Tickets
             </a>
           )}
           <StubItButton onClick={handleStubIt} />
@@ -240,7 +240,7 @@ export function EventPage(): React.JSX.Element {
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium
               bg-stub-cyan/10 text-stub-cyan hover:bg-stub-cyan/20 transition-colors"
           >
-            📤 Share
+            <Share2 className="w-4 h-4" /> Share
           </button>
           {venue && (
             <a
@@ -250,7 +250,7 @@ export function EventPage(): React.JSX.Element {
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium
                 bg-stub-green/10 text-stub-green hover:bg-stub-green/20 transition-colors"
             >
-              📍 Directions
+              <Navigation className="w-4 h-4" /> Directions
             </a>
           )}
           <div className="flex-1" />
@@ -260,7 +260,7 @@ export function EventPage(): React.JSX.Element {
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium
                 bg-stub-surface text-stub-text border border-stub-border hover:border-stub-amber/30 hover:bg-stub-surface-hover transition-colors"
             >
-              🎤 {artist.name}
+              <Music className="w-4 h-4" /> {artist.name}
             </button>
           )}
           {venue && (
@@ -269,7 +269,7 @@ export function EventPage(): React.JSX.Element {
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium
                 bg-stub-surface text-stub-text border border-stub-border hover:border-stub-cyan/30 hover:bg-stub-surface-hover transition-colors"
             >
-              🏛️ {venue.name}
+              <MapPin className="w-4 h-4" /> {venue.name}
             </button>
           )}
         </div>

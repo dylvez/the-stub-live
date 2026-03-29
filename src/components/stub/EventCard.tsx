@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { MapPin, Calendar, Clock, ExternalLink, Users } from 'lucide-react';
+import { MapPin, Calendar, Clock, ExternalLink, Users, Ticket } from 'lucide-react';
 import { Badge } from '@/components/ui';
 import { StubItButton } from '@/components/ui/StubItButton';
 import { getArtistDisplayImage } from '@/utils/artistImage';
@@ -253,7 +253,7 @@ export function EventCard({
                   className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium
                     bg-stub-amber/15 text-stub-amber hover:bg-stub-amber/25 transition-colors"
                 >
-                  🎟️ Tickets
+                  <Ticket className="w-4 h-4" /> Tickets
                 </a>
               )}
               <StubItButton onClick={handleStubIt} />
