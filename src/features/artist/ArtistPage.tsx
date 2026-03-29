@@ -165,7 +165,7 @@ export function ArtistPage(): React.JSX.Element {
           )}
         </div>
 
-        {/* Last.fm bio or AI Briefing */}
+        {/* Last.fm bio or Artist Briefing */}
         {(lastfmInfo?.bio || briefing || briefingLoading) && (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
             <Card glow="amber" className="mb-6">
@@ -174,7 +174,7 @@ export function ArtistPage(): React.JSX.Element {
                   <span className="text-xs">✦</span>
                 </div>
                 <span className="text-xs font-mono text-stub-amber uppercase tracking-wider">
-                  {briefing ? 'AI Briefing' : 'About'}
+                  {briefing ? 'Artist Briefing' : 'About'}
                 </span>
               </div>
 
@@ -198,7 +198,7 @@ export function ArtistPage(): React.JSX.Element {
                 <div className="space-y-2 animate-pulse">
                   <div className="flex items-center gap-2 text-xs text-stub-amber">
                     <BrandedSpinner size={14} />
-                    Generating AI Briefing...
+                    Generating Artist Briefing...
                   </div>
                   <div className="h-3 bg-stub-border rounded w-full" />
                   <div className="h-3 bg-stub-border rounded w-4/5" />

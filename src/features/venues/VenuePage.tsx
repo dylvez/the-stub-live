@@ -4,17 +4,14 @@ import { Helmet } from 'react-helmet-async';
 import {
   ArrowLeft, MapPin, Calendar, Accessibility, Star,
   ExternalLink, Clock, ChevronDown, Lightbulb, Music,
-  StickyNote, Edit2, Check, X, Video, Play,
+  Video, Play,
   Navigation, Phone, Globe, Ticket,
 } from 'lucide-react';
 import { BrandedSpinner } from '@/components/ui/BrandedSpinner';
 import { StubItButton } from '@/components/ui/StubItButton';
-import { doc, getDoc, setDoc, Timestamp } from 'firebase/firestore';
 import { Card, Badge } from '@/components/ui';
 import { useVenue } from '@/hooks/useVenue';
 import { useEvents } from '@/hooks/useEvents';
-import { useAuth } from '@/contexts/AuthContext';
-import { db } from '@/services/firebase/config';
 import { isSetlistFmConfigured } from '@/services/api/config';
 import { memScanByPrefix } from '@/services/api/cache';
 import { searchSetlistsByVenue } from '@/services/api/setlistfm';
@@ -82,8 +79,6 @@ export function VenuePage(): React.JSX.Element {
     return { allEvents: mergedEvents, artists: mergedArtists };
   }, [apiEvents, apiArtists, venue?.name, id]);
 
-  const { user } = useAuth();
-
   // Shows tab
   type ShowsTab = 'upcoming' | 'recent' | 'youtube';
   const [showsTab, setShowsTab] = useState<ShowsTab>('upcoming');
@@ -102,38 +97,6 @@ export function VenuePage(): React.JSX.Element {
       .finally(() => setBriefingLoading(false));
   }, [venue?.name]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Personal venue notes
-  const [venueNote, setVenueNote] = useState('');
-  const [editingNote, setEditingNote] = useState(false);
-  const [editNoteText, setEditNoteText] = useState('');
-  const [noteSaving, setNoteSaving] = useState(false);
-
-  useEffect(() => {
-    if (!user || !id) return;
-    const noteRef = doc(db, 'venueNotes', `${user.uid}_${id}`);
-    getDoc(noteRef).then((snap) => {
-      if (snap.exists()) setVenueNote(snap.data().note ?? '');
-    }).catch(() => {});
-  }, [user, id]);
-
-  async function handleSaveNote(): Promise<void> {
-    if (!user || !id) return;
-    setNoteSaving(true);
-    try {
-      await setDoc(doc(db, 'venueNotes', `${user.uid}_${id}`), {
-        userId: user.uid,
-        venueId: id,
-        note: editNoteText.trim(),
-        updatedAt: Timestamp.now(),
-      });
-      setVenueNote(editNoteText.trim());
-      setEditingNote(false);
-    } catch (err) {
-      console.error('Failed to save venue note:', err);
-    } finally {
-      setNoteSaving(false);
-    }
-  }
 
   // Past events from setlist.fm
   const [sfmPastEvents, setSfmPastEvents] = useState<EventData[]>([]);
@@ -286,7 +249,7 @@ export function VenuePage(): React.JSX.Element {
           )}
         </div>
 
-        {/* AI Venue Overview */}
+        {/* Venue Briefing */}
         {(venueBriefing || briefingLoading) && (
           <Card glow="amber" className="mb-6">
             <div className="flex items-center gap-2 mb-3">
@@ -294,7 +257,7 @@ export function VenuePage(): React.JSX.Element {
                 <span className="text-xs">✦</span>
               </div>
               <span className="text-xs font-mono text-stub-amber uppercase tracking-wider">
-                Venue Overview
+                Venue Briefing
               </span>
             </div>
 
@@ -328,66 +291,19 @@ export function VenuePage(): React.JSX.Element {
                 )}
               </div>
             ) : (
-              <div className="space-y-2">
-                <div className="h-4 bg-stub-border/40 rounded animate-pulse w-3/4" />
-                <div className="h-4 bg-stub-border/40 rounded animate-pulse w-full" />
-                <div className="h-4 bg-stub-border/40 rounded animate-pulse w-2/3" />
+              <div className="space-y-2 animate-pulse">
+                <div className="flex items-center gap-2 text-xs text-stub-amber">
+                  <BrandedSpinner size={14} />
+                  Generating Venue Briefing...
+                </div>
+                <div className="h-3 bg-stub-border rounded w-full" />
+                <div className="h-3 bg-stub-border rounded w-4/5" />
+                <div className="h-3 bg-stub-border rounded w-3/5" />
               </div>
             )}
           </Card>
         )}
 
-        {/* Personal venue notes */}
-        {user && (
-          <section className="mb-6">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-semibold text-stub-text flex items-center gap-1.5">
-                <StickyNote className="w-4 h-4 text-stub-amber" />
-                My Notes
-              </h3>
-              {!editingNote && (
-                <button
-                  onClick={() => { setEditingNote(true); setEditNoteText(venueNote); }}
-                  className="text-xs text-stub-muted hover:text-stub-text transition-colors flex items-center gap-1"
-                >
-                  <Edit2 className="w-3 h-3" />
-                  {venueNote ? 'Edit' : 'Add note'}
-                </button>
-              )}
-            </div>
-            {editingNote ? (
-              <div>
-                <textarea
-                  value={editNoteText}
-                  onChange={(e) => setEditNoteText(e.target.value)}
-                  placeholder="Parking tips, best spots to stand, drink specials..."
-                  rows={3}
-                  className="w-full bg-stub-surface border border-stub-border rounded-lg p-3 text-sm text-stub-text
-                    placeholder:text-stub-muted/50 focus:outline-none focus:border-stub-amber/50 resize-none"
-                />
-                <div className="flex gap-2 mt-2">
-                  <button
-                    onClick={handleSaveNote}
-                    disabled={noteSaving}
-                    className="flex items-center gap-1 px-3 py-1.5 bg-stub-amber text-stub-bg text-xs font-semibold rounded-lg hover:bg-stub-amber/90 transition-colors disabled:opacity-50"
-                  >
-                    <Check className="w-3 h-3" />
-                    Save
-                  </button>
-                  <button
-                    onClick={() => setEditingNote(false)}
-                    className="flex items-center gap-1 px-3 py-1.5 text-xs text-stub-muted hover:text-stub-text transition-colors"
-                  >
-                    <X className="w-3 h-3" />
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            ) : venueNote ? (
-              <p className="text-sm text-stub-muted bg-stub-surface rounded-lg p-3 border border-stub-border whitespace-pre-wrap">{venueNote}</p>
-            ) : null}
-          </section>
-        )}
 
         {/* Photo gallery */}
         {venue.images.gallery.length > 0 && (
