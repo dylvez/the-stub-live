@@ -10,7 +10,7 @@ import { Card, Badge, Button } from '@/components/ui';
 import { StubItButton } from '@/components/ui/StubItButton';
 import { useEvent } from '@/hooks/useEvent';
 import { useTicketLookup } from '@/hooks/useTicketLookup';
-import { isTicketPurchaseUrl, getTicketSourceLinks } from '@/utils/ticketUrl';
+import { isTicketPurchaseUrl } from '@/utils/ticketUrl';
 import { generateEventBriefing } from '@/services/ai/briefings';
 import { getArtistDisplayImage } from '@/utils/artistImage';
 import type { AiEventBriefing } from '@/types';
@@ -118,7 +118,6 @@ export function EventPage(): React.JSX.Element {
 
   const hasSupportActs = supportActNames.length > 0 || event.artistIds.length > 1;
   const hasTicketUrl = Boolean(resolvedTicketUrl);
-  const ticketSources = getTicketSourceLinks(event.externalIds);
   const displayImage = artist
     ? getArtistDisplayImage(artist.images.primary, artist.genres, artist.name, venue?.images?.primary)
     : null;
@@ -350,34 +349,6 @@ export function EventPage(): React.JSX.Element {
                 </div>
               )}
             </Card>
-          </motion.div>
-        )}
-
-
-        {/* Additional Ticket Sources */}
-        {ticketSources.length > 0 && (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
-            <section className="mb-6">
-              <h2 className="font-display font-bold text-stub-text text-sm mb-3 flex items-center gap-2">
-                <Ticket className="w-4 h-4 text-stub-amber" />
-                Find Tickets
-              </h2>
-              <div className="space-y-2">
-                {ticketSources.map(({ platform, url }) => (
-                  <a
-                    key={platform}
-                    href={url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-between px-4 py-3 bg-stub-surface rounded-lg border border-stub-border
-                      hover:border-stub-amber/30 transition-colors group"
-                  >
-                    <span className="text-sm text-stub-text font-medium">{platform}</span>
-                    <ExternalLink className="w-4 h-4 text-stub-muted group-hover:text-stub-amber transition-colors" />
-                  </a>
-                ))}
-              </div>
-            </section>
           </motion.div>
         )}
 
