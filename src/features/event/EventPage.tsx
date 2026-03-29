@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import {
-  ArrowLeft, ExternalLink, MapPin, Calendar, Clock, Globe,
+  ArrowLeft, MapPin, Calendar, Clock, Globe,
   Ticket, Music, Lightbulb, Headphones, Share2, Navigation,
 } from 'lucide-react';
 import { Card, Badge, Button } from '@/components/ui';
