@@ -107,7 +107,7 @@ export function AskStubPage(): React.JSX.Element {
 
       setMessages([...newMessages, { role: 'assistant', content: result.data.response }]);
     } catch (err) {
-      console.error('Ask Stub failed:', err);
+      console.error('The Roadie failed:', err);
       setMessages([...newMessages, {
         role: 'assistant',
         content: "Sorry, I'm having trouble connecting right now. Try again in a moment!",
@@ -128,7 +128,7 @@ export function AskStubPage(): React.JSX.Element {
   return (
     <div className="flex flex-col h-[calc(100vh-8rem)]">
       <Helmet>
-        <title>Ask Stub — The Stub Live</title>
+        <title>The Roadie — The Stub Live</title>
       </Helmet>
 
       {/* Header */}
@@ -141,7 +141,7 @@ export function AskStubPage(): React.JSX.Element {
             <Sparkles className="w-4 h-4 text-stub-bg" />
           </div>
           <div>
-            <h1 className="font-display font-bold text-stub-text text-sm">Ask Stub</h1>
+            <h1 className="font-display font-bold text-stub-text text-sm">The Roadie</h1>
             <p className="text-[10px] text-stub-muted">Your concert discovery assistant</p>
           </div>
         </div>

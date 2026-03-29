@@ -5,7 +5,7 @@ const navItems = [
   { to: '/search', label: 'Search', emoji: '🔍' },
   { to: '/create', label: 'Stub It', emoji: '🎫' },
   { to: '/stubs', label: 'My Stubs', emoji: '🎟️' },
-  { to: '/ask', label: 'Ask Stub', emoji: '✨' },
+  { to: '/ask', label: 'The Roadie', emoji: '✨' },
 ];
 
 export function BottomNav(): React.JSX.Element {

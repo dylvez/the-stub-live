@@ -111,12 +111,6 @@ export function DiscoveryPage(): React.JSX.Element {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [events, artists, activeGenre, now.toDateString()]);
 
-  const thisWeekEnd = new Date(now.getTime() + 7 * 86400000);
-  const showsThisWeek = events.filter((e) => {
-    const d = e.date.toDate();
-    return d >= now && d <= thisWeekEnd;
-  }).length;
-
   // Dynamic genre filters derived from artist data
   const genreFilters = useMemo(() => {
     const counts = new Map<string, number>();
@@ -551,21 +545,6 @@ export function DiscoveryPage(): React.JSX.Element {
         </div>
       </section>
 
-      {/* Quick stats bar */}
-      <section className="mt-8 mb-4">
-        <div className="grid grid-cols-3 gap-3">
-          {[
-            { label: 'Shows This Week', value: String(showsThisWeek), color: 'text-stub-amber' },
-            { label: 'In Your Area', value: String(totalResults), color: 'text-stub-cyan' },
-            { label: 'Friends Going', value: '—', color: 'text-stub-coral' },
-          ].map(({ label, value, color }) => (
-            <div key={label} className="bg-stub-surface rounded-lg border border-stub-border p-3 text-center">
-              <div className={`text-2xl font-display font-bold ${color}`}>{value}</div>
-              <div className="text-[10px] text-stub-muted mt-0.5">{label}</div>
-            </div>
-          ))}
-        </div>
-      </section>
       </>}
       </>}
     </div>
