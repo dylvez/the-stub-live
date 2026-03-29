@@ -213,7 +213,7 @@ export function EventPage(): React.JSX.Element {
           <button
             onClick={handleShare}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium
-              bg-stub-surface text-stub-muted border border-stub-border hover:text-stub-text hover:bg-stub-surface-hover transition-colors"
+              bg-stub-cyan/10 text-stub-cyan hover:bg-stub-cyan/20 transition-colors"
           >
             <Share2 className="w-4 h-4" />
             Share
@@ -224,7 +224,7 @@ export function EventPage(): React.JSX.Element {
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium
-                bg-stub-surface text-stub-muted border border-stub-border hover:text-stub-text hover:bg-stub-surface-hover transition-colors"
+                bg-stub-coral/10 text-stub-coral hover:bg-stub-coral/20 transition-colors"
             >
               <Navigation className="w-4 h-4" />
               Directions
