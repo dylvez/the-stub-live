@@ -224,7 +224,7 @@ export function EventPage(): React.JSX.Element {
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium
-                bg-stub-coral/10 text-stub-coral hover:bg-stub-coral/20 transition-colors"
+                bg-stub-green/10 text-stub-green hover:bg-stub-green/20 transition-colors"
             >
               <Navigation className="w-4 h-4" />
               Directions

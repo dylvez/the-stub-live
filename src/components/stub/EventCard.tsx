@@ -22,12 +22,12 @@ function getGenreAccent(genres?: string[]): { border: string; glow: string; badg
 }
 
 const ACCENT_MAP = {
-  rock:       { border: 'border-stub-coral/30', glow: 'hover:border-stub-coral/50', badge: 'bg-stub-coral/15 text-stub-coral', text: 'text-stub-coral', bg: 'from-stub-coral/5 to-transparent' },
+  rock:       { border: 'border-stub-orange/30', glow: 'hover:border-stub-orange/50', badge: 'bg-stub-orange/15 text-stub-orange', text: 'text-stub-orange', bg: 'from-stub-orange/5 to-transparent' },
   jazz:       { border: 'border-stub-cyan/30', glow: 'hover:border-stub-cyan/50', badge: 'bg-stub-cyan/15 text-stub-cyan', text: 'text-stub-cyan', bg: 'from-stub-cyan/5 to-transparent' },
   electronic: { border: 'border-stub-violet/30', glow: 'hover:border-stub-violet/50', badge: 'bg-stub-violet/15 text-stub-violet', text: 'text-stub-violet', bg: 'from-stub-violet/5 to-transparent' },
   hiphop:     { border: 'border-stub-amber/30', glow: 'hover:border-stub-amber/50', badge: 'bg-stub-amber/15 text-stub-amber', text: 'text-stub-amber', bg: 'from-stub-amber/5 to-transparent' },
   folk:       { border: 'border-stub-green/30', glow: 'hover:border-stub-green/50', badge: 'bg-stub-green/15 text-stub-green', text: 'text-stub-green', bg: 'from-stub-green/5 to-transparent' },
-  pop:        { border: 'border-stub-coral/30', glow: 'hover:border-stub-coral/50', badge: 'bg-stub-coral/15 text-stub-coral', text: 'text-stub-coral', bg: 'from-stub-coral/5 to-transparent' },
+  pop:        { border: 'border-stub-violet/30', glow: 'hover:border-stub-violet/50', badge: 'bg-stub-violet/15 text-stub-violet', text: 'text-stub-violet', bg: 'from-stub-violet/5 to-transparent' },
   classical:  { border: 'border-stub-cyan/30', glow: 'hover:border-stub-cyan/50', badge: 'bg-stub-cyan/15 text-stub-cyan', text: 'text-stub-cyan', bg: 'from-stub-cyan/5 to-transparent' },
   default:    { border: 'border-stub-border', glow: 'hover:border-stub-border-light', badge: 'bg-stub-muted/15 text-stub-muted', text: 'text-stub-amber', bg: 'from-transparent to-transparent' },
 };
@@ -234,7 +234,7 @@ export function EventCard({
             {genres && genres.length > 0 ? (
               <div className="flex flex-wrap gap-1">
                 {genres.slice(0, 3).map((g) => (
-                  <span key={g} className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-stub-coral/15 text-stub-coral">
+                  <span key={g} className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-stub-orange/15 text-stub-orange">
                     {g}
                   </span>
                 ))}
