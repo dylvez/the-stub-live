@@ -1,4 +1,4 @@
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { Timestamp } from 'firebase/firestore';
 import { storage } from './config';
 import type { StubPhoto } from '@/types';
@@ -102,4 +102,14 @@ export async function uploadStubPhotos(
   }
 
   return { photos, failedCount };
+}
+
+/** Delete a single photo from Cloud Storage by its storageRef path */
+export async function deleteStubPhoto(storagePath: string): Promise<void> {
+  try {
+    const storageRef = ref(storage, storagePath);
+    await deleteObject(storageRef);
+  } catch (err) {
+    console.warn('Failed to delete photo from storage:', err);
+  }
 }

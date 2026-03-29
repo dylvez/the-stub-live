@@ -4,7 +4,7 @@ import { collection, query, where, orderBy, getDocs } from 'firebase/firestore';
 import { motion } from 'framer-motion';
 import {
   Ticket, PlusCircle, MapPin, Calendar, Star, Search, SlidersHorizontal,
-  Music, Eye, Clock, List, ChevronLeft, ChevronRight,
+  Music, Eye, Clock, List, ChevronLeft, ChevronRight, Zap,
 } from 'lucide-react';
 import { Button, Card, Badge } from '@/components/ui';
 import { useAuth } from '@/contexts/AuthContext';
@@ -20,7 +20,11 @@ interface StubRecord {
   vibeRating: { energy: number; crowd: number; sound: number; intimacy: number };
   highlights: string[];
   photoCount: number;
+  photos?: { url: string }[];
   visibility: StubVisibility;
+  status?: 'going' | 'attended';
+  artistImage?: string;
+  eventId?: string;
   createdAt: { toDate?: () => Date } | string;
 }
 
@@ -244,6 +248,50 @@ export function MyStubsPage(): React.JSX.Element {
             </div>
           </div>
 
+          {/* "Going → Attended" banner for past going stubs */}
+          {(() => {
+            const now = new Date();
+            const pastGoing = stubs.filter((s) => s.status === 'going' && getDate(s.date) < now);
+            if (pastGoing.length === 0) return null;
+            return (
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-4">
+                <div className="border-l-2 border-stub-amber bg-stub-amber/5 rounded-r-lg p-3">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Zap className="w-4 h-4 text-stub-amber" />
+                    <span className="text-sm font-semibold text-stub-text">
+                      {pastGoing.length === 1
+                        ? `You went to ${pastGoing[0].artistName} — how was it?`
+                        : `${pastGoing.length} shows happened — capture your experience!`}
+                    </span>
+                  </div>
+                  <div className="space-y-2">
+                    {pastGoing.map((stub) => (
+                      <div key={stub.id} className="flex items-center justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          {pastGoing.length > 1 && (
+                            <div className="text-xs text-stub-muted truncate">
+                              {stub.artistName} at {stub.venueName} — {getDate(stub.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                            </div>
+                          )}
+                        </div>
+                        <Button
+                          variant="tinted"
+                          tintColor="amber"
+                          size="sm"
+                          shape="pill"
+                          onClick={() => navigate(`/create?editId=${stub.id}`)}
+                          icon={<Zap className="w-3.5 h-3.5" />}
+                        >
+                          Capture It
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
+            );
+          })()}
+
           {/* "On This Day" card */}
           {onThisDay.length > 0 && (
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-4">
@@ -405,13 +453,27 @@ export function MyStubsPage(): React.JSX.Element {
             ) : (
               filteredStubs.map((stub) => {
                 const stubDate = getDate(stub.date);
+                const isGoing = stub.status === 'going';
+                const isPastGoing = isGoing && stubDate < new Date();
+                const photoCount = stub.photoCount ?? stub.photos?.length ?? 0;
                 return (
                   <motion.div key={stub.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-                    <Card className="paper-grain cursor-pointer" hover onClick={() => navigate(`/stub/${stub.id}`)}>
+                    <Card
+                      className={`paper-grain cursor-pointer ${isGoing ? 'border-l-2 border-l-stub-cyan border-dashed' : ''}`}
+                      hover
+                      onClick={() => isPastGoing ? navigate(`/create?editId=${stub.id}`) : navigate(`/stub/${stub.id}`)}
+                    >
                       <div className="flex items-start gap-3">
                         <div className="flex-1 min-w-0">
-                          <div className="font-display font-bold text-stub-text text-base truncate">
-                            {stub.artistName ?? 'Unknown Artist'}
+                          <div className="flex items-center gap-2">
+                            <div className="font-display font-bold text-stub-text text-base truncate">
+                              {stub.artistName ?? 'Unknown Artist'}
+                            </div>
+                            {isGoing && (
+                              <Badge variant="cyan" className="text-[9px] shrink-0">
+                                {isPastGoing ? 'Went' : 'Going'}
+                              </Badge>
+                            )}
                           </div>
                           <div className="text-xs text-stub-muted flex items-center gap-1 mt-0.5">
                             <MapPin className="w-3 h-3" />
@@ -423,14 +485,14 @@ export function MyStubsPage(): React.JSX.Element {
                               weekday: 'short', month: 'short', day: 'numeric', year: 'numeric',
                             })}
                           </div>
-                          {stub.rating > 0 && (
+                          {!isGoing && stub.rating > 0 && (
                             <div className="flex items-center gap-0.5 mt-2">
                               {[1, 2, 3, 4, 5].map((i) => (
                                 <Star key={i} className={`w-3.5 h-3.5 ${i <= stub.rating ? 'fill-stub-amber text-stub-amber' : 'text-stub-border'}`} />
                               ))}
                             </div>
                           )}
-                          {stub.highlights.length > 0 && (
+                          {!isGoing && stub.highlights.length > 0 && (
                             <div className="flex flex-wrap gap-1 mt-2">
                               {stub.highlights.map((h) => (
                                 <Badge key={h} variant="amber" className="text-[9px]">{h}</Badge>
@@ -439,8 +501,11 @@ export function MyStubsPage(): React.JSX.Element {
                           )}
                           <div className="flex items-center gap-2 mt-2">
                             <Badge variant="muted" className="text-[9px]">{stub.visibility}</Badge>
-                            {stub.photoCount > 0 && (
-                              <span className="text-[10px] text-stub-muted">{stub.photoCount} photo{stub.photoCount !== 1 ? 's' : ''}</span>
+                            {photoCount > 0 && (
+                              <span className="text-[10px] text-stub-muted">{photoCount} photo{photoCount !== 1 ? 's' : ''}</span>
+                            )}
+                            {isPastGoing && (
+                              <span className="text-[10px] text-stub-amber font-medium">Tap to capture</span>
                             )}
                           </div>
                         </div>

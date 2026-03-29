@@ -8,13 +8,14 @@ import {
   ChevronUp, ChevronDown,
 } from 'lucide-react';
 import { BrandedSpinner } from '@/components/ui/BrandedSpinner';
-import { doc, setDoc, Timestamp as FsTimestamp } from 'firebase/firestore';
+import { doc, setDoc, getDoc, Timestamp as FsTimestamp } from 'firebase/firestore';
 import { Button, Card, Input } from '@/components/ui';
 import { SearchResults } from '@/components/search';
 import { useSearch } from '@/hooks/useSearch';
 import { useAuth } from '@/contexts/AuthContext';
 import { db } from '@/services/firebase/config';
-import { uploadStubPhotos, MAX_PHOTOS, MAX_FILE_SIZE, ALLOWED_TYPES } from '@/services/firebase/storage';
+import { uploadStubPhotos, deleteStubPhoto, MAX_PHOTOS, MAX_FILE_SIZE, ALLOWED_TYPES } from '@/services/firebase/storage';
+import type { StubPhoto } from '@/types';
 import { searchSetlists } from '@/services/api/setlistfm';
 import { enrichSetlistWithGenius } from '@/services/api/enrichSetlist';
 import { isEventInFuture } from '@/utils/formatDate';
@@ -110,6 +111,13 @@ export function CreateStubPage(): React.JSX.Element {
   // Companions
   const [companionsText, setCompanionsText] = useState('');
 
+  // Edit mode
+  const [editId, setEditId] = useState<string | null>(null);
+  const [editLoading, setEditLoading] = useState(false);
+  const [existingPhotos, setExistingPhotos] = useState<StubPhoto[]>([]);
+  const [photosToDelete, setPhotosToDelete] = useState<string[]>([]);
+  const isEditMode = editId !== null;
+
   const { user } = useAuth();
 
   // URL params — pre-populate from "Stub It" buttons
@@ -195,6 +203,83 @@ export function CreateStubPage(): React.JSX.Element {
     }
   }, [searchParams]);
 
+  // Edit mode — fetch existing stub and pre-populate form
+  useEffect(() => {
+    const eid = searchParams.get('editId');
+    if (!eid || !user) return;
+
+    setEditId(eid);
+    setEditLoading(true);
+
+    getDoc(doc(db, 'stubs', eid)).then((snap) => {
+      if (!snap.exists()) { setEditLoading(false); return; }
+      const data = snap.data();
+      if (data.userId !== user.uid) { setEditLoading(false); return; }
+
+      // Pre-populate form state
+      if (data.rating) setRating(data.rating);
+      if (data.vibeRating) setVibes(data.vibeRating);
+      if (data.highlights) setSelectedHighlights(new Set(data.highlights));
+      if (data.companions) setCompanionsText(data.companions.join(', '));
+      if (data.narrative?.body) setNarrative(data.narrative.body);
+      if (data.visibility) setVisibility(data.visibility);
+      if (data.photos?.length > 0) setExistingPhotos(data.photos);
+
+      if (data.setlist?.songs) {
+        setSongs(data.setlist.songs.map((s: SetlistSong, i: number) => ({
+          id: `edit-${i}`,
+          title: s.title,
+          encore: s.encore ?? false,
+          isCover: s.isCover ?? false,
+          notes: s.notes,
+          originalArtist: s.originalArtist,
+        })));
+        if (data.setlist.source) setSetlistSource(data.setlist.source);
+        if (data.setlist.setlistfmId) setSetlistfmId(data.setlist.setlistfmId);
+      }
+
+      // Reconstruct selectedShow from stub data
+      const stubDate = data.date?.toDate ? data.date.toDate() : new Date(data.date);
+      const fakeEvent: EventData = {
+        id: data.eventId ?? `edit-${eid}`,
+        artistIds: data.artistIds ?? [],
+        venueId: data.venueId ?? '',
+        date: Timestamp.fromDate(stubDate),
+        status: 'scheduled',
+        source: 'manual',
+        externalIds: {},
+        lastUpdated: Timestamp.now(),
+      };
+      const fakeArtist: ArtistData | undefined = data.artistName ? {
+        id: data.artistIds?.[0] ?? '',
+        name: data.artistName,
+        sortName: data.artistName,
+        genres: [],
+        tags: [],
+        images: { primary: data.artistImage ?? '', gallery: [] },
+        externalIds: {},
+      } : undefined;
+      const fakeVenue: VenueData | undefined = data.venueName ? {
+        id: data.venueId ?? '',
+        name: data.venueName,
+        address: '', city: '', state: '', lat: 0, lng: 0,
+        venueType: 'club',
+        images: { primary: '', gallery: [] },
+        externalIds: {},
+        accessibility: { wheelchairAccessible: false, assistiveListening: false },
+        stats: { totalShowsTracked: 0, topArtists: [], genreBreakdown: [] },
+        lastUpdated: Timestamp.now(),
+      } : undefined;
+
+      setSelectedShow({ event: fakeEvent, artist: fakeArtist, venue: fakeVenue });
+
+      // Skip identify step — go to capture (post-event) or going (pre-event)
+      const isPast = stubDate <= new Date();
+      setCurrentStep(isPast ? 'capture' : 'going');
+      setEditLoading(false);
+    }).catch(() => setEditLoading(false));
+  }, [searchParams, user]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Cleanup photo preview URLs on unmount
   useEffect(() => {
     return () => {
@@ -266,10 +351,10 @@ export function CreateStubPage(): React.JSX.Element {
     setIsPublishing(true);
 
     try {
-      const stubId = `stub-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      const stubId = isEditMode ? editId : `stub-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
       const now = FsTimestamp.now();
 
-      // 1. Upload photos to Cloud Storage (post-event only)
+      // 1. Upload NEW photos to Cloud Storage (post-event only)
       const { photos: uploadedPhotos, failedCount } = !isPreEvent && photos.length > 0
         ? await uploadStubPhotos(stubId, photos.map((p) => ({ file: p.file, caption: p.caption })))
         : { photos: [], failedCount: 0 };
@@ -277,6 +362,15 @@ export function CreateStubPage(): React.JSX.Element {
       if (failedCount > 0) {
         console.warn(`${failedCount} photo(s) failed to upload.`);
       }
+
+      // In edit mode: delete removed photos from Cloud Storage
+      if (isEditMode && photosToDelete.length > 0) {
+        await Promise.all(photosToDelete.map((ref) => deleteStubPhoto(ref)));
+      }
+
+      // Merge existing photos (minus deleted) with newly uploaded
+      const keptPhotos = existingPhotos.filter((p) => !photosToDelete.includes(p.storageRef));
+      const allPhotos = [...keptPhotos, ...uploadedPhotos];
 
       // 2. Build setlist if any songs were entered
       const filledSongs = songs.filter((s) => s.title.trim().length > 0);
@@ -309,12 +403,9 @@ export function CreateStubPage(): React.JSX.Element {
         artistImage: selectedShow.artist?.images.primary ?? '',
         date: selectedShow.event.date,
         visibility,
-        reactions: [],
-        comments: [],
-        shares: 0,
-        createdAt: now,
+        ...(isEditMode ? {} : { reactions: [], comments: [], shares: 0, createdAt: now }),
         updatedAt: now,
-        publishedAt: now,
+        ...(isEditMode ? {} : { publishedAt: now }),
       };
 
       const stubData = isPreEvent
@@ -322,7 +413,7 @@ export function CreateStubPage(): React.JSX.Element {
             ...baseData,
             status: 'going' as const,
             companions: companionsText.split(',').map((c) => c.trim()).filter(Boolean),
-            photos: [],
+            photos: allPhotos,
             highlights: [],
           }
         : {
@@ -332,31 +423,33 @@ export function CreateStubPage(): React.JSX.Element {
             vibeRating: vibes,
             highlights: Array.from(selectedHighlights),
             companions: companionsText.split(',').map((c) => c.trim()).filter(Boolean),
-            photos: uploadedPhotos,
+            photos: allPhotos,
             ...(setlist ? { setlist } : {}),
             ...(narrativeData ? { narrative: narrativeData } : {}),
           };
 
-      // Save to Firestore
-      await setDoc(doc(db, 'stubs', stubId), stubData);
+      // Save to Firestore (merge in edit mode to preserve reactions/comments)
+      await setDoc(doc(db, 'stubs', stubId), stubData, isEditMode ? { merge: true } : {});
 
       // Fire-and-forget: enrich setlist songs with Genius metadata
       if (setlist && setlist.songs.length > 0 && selectedShow?.artist?.name) {
-        enrichSetlistWithGenius(stubId, setlist.songs, selectedShow.artist.name).catch(() => {
-          // Best-effort — don't block navigation or show errors
-        });
+        enrichSetlistWithGenius(stubId, setlist.songs, selectedShow.artist.name).catch(() => {});
       }
 
       // Also save locally as fallback
-      const existing = JSON.parse(localStorage.getItem('stub:my-stubs') ?? '[]');
-      existing.unshift({
-        ...stubData,
-        date: selectedShow.event.date.toDate().toISOString(),
-        createdAt: new Date().toISOString(),
-        publishedAt: new Date().toISOString(),
-        photos: uploadedPhotos,
-      });
-      localStorage.setItem('stub:my-stubs', JSON.stringify(existing));
+      const localStubs = JSON.parse(localStorage.getItem('stub:my-stubs') ?? '[]');
+      if (isEditMode) {
+        const idx = localStubs.findIndex((s: { id: string }) => s.id === stubId);
+        if (idx >= 0) localStubs[idx] = { ...stubData, date: selectedShow.event.date.toDate().toISOString() };
+      } else {
+        localStubs.unshift({
+          ...stubData,
+          date: selectedShow.event.date.toDate().toISOString(),
+          createdAt: new Date().toISOString(),
+          publishedAt: new Date().toISOString(),
+        });
+      }
+      localStorage.setItem('stub:my-stubs', JSON.stringify(localStubs));
 
       navigate(`/stub/${stubId}`, { state: { justPublished: true } });
     } catch (err) {
@@ -369,7 +462,7 @@ export function CreateStubPage(): React.JSX.Element {
     const files = e.target.files;
     if (!files) return;
 
-    const remaining = MAX_PHOTOS - photos.length;
+    const remaining = MAX_PHOTOS - photos.length - existingPhotos.length;
     const accepted: PhotoItem[] = [];
 
     for (const file of Array.from(files)) {
@@ -475,11 +568,21 @@ export function CreateStubPage(): React.JSX.Element {
   }
 
   function prevStep(): void {
-    if (stepIndex > 0) {
+    // In edit mode, don't go back to identify step
+    const minStep = isEditMode ? 1 : 0;
+    if (stepIndex > minStep) {
       setCurrentStep(STEPS[stepIndex - 1].key);
     } else {
       navigate(-1);
     }
+  }
+
+  if (editLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <BrandedSpinner size={32} />
+      </div>
+    );
   }
 
   return (
@@ -805,11 +908,38 @@ export function CreateStubPage(): React.JSX.Element {
                     <Camera className="w-4 h-4" /> Photos from the show
                   </p>
                   <span className="text-xs font-mono text-stub-muted">
-                    {photos.length}/{MAX_PHOTOS}
+                    {existingPhotos.length + photos.length}/{MAX_PHOTOS}
                   </span>
                 </div>
 
-                {/* Photo grid */}
+                {/* Existing photos (edit mode) */}
+                {existingPhotos.length > 0 && (
+                  <div className="space-y-3 mb-3">
+                    {existingPhotos.map((photo) => (
+                      <div key={photo.storageRef} className="flex gap-3 items-start">
+                        <div className="relative w-20 h-20 rounded-lg overflow-hidden bg-stub-border flex-shrink-0 group">
+                          <img src={photo.url} alt="" className="w-full h-full object-cover" />
+                          <button
+                            onClick={() => {
+                              setPhotosToDelete((prev) => [...prev, photo.storageRef]);
+                              setExistingPhotos((prev) => prev.filter((p) => p.storageRef !== photo.storageRef));
+                            }}
+                            aria-label="Remove photo"
+                            className="absolute top-0.5 right-0.5 p-0.5 bg-stub-bg/80 rounded-full text-stub-muted hover:text-stub-text
+                              opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
+                        <div className="flex-1 text-xs text-stub-muted self-center">
+                          {photo.caption || 'Existing photo'}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* New photo grid */}
                 {photos.length > 0 && (
                   <div className="space-y-3 mb-3">
                     {photos.map((photo) => (
@@ -848,7 +978,7 @@ export function CreateStubPage(): React.JSX.Element {
                   onChange={handlePhotoSelect}
                   className="hidden"
                 />
-                {photos.length < MAX_PHOTOS && (
+                {(existingPhotos.length + photos.length) < MAX_PHOTOS && (
                   <button
                     onClick={() => fileInputRef.current?.click()}
                     className="w-full p-4 border-2 border-dashed border-stub-border rounded-xl text-center
@@ -1137,7 +1267,11 @@ export function CreateStubPage(): React.JSX.Element {
                 onClick={handlePublish}
                 disabled={isPublishing}
               >
-                {isPublishing ? 'Publishing...' : isPreEvent ? "I'm Going!" : 'Publish Stub'}
+                {isPublishing
+                  ? (isEditMode ? 'Updating...' : 'Publishing...')
+                  : isEditMode
+                    ? 'Update Stub'
+                    : isPreEvent ? "I'm Going!" : 'Publish Stub'}
               </Button>
             </div>
           )}
