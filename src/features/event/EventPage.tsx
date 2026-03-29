@@ -3,8 +3,8 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import {
-  ArrowLeft, ExternalLink, Share2, MapPin, Calendar, Clock, Globe,
-  Navigation, Ticket, Music, Lightbulb, Headphones,
+  ArrowLeft, ExternalLink, MapPin, Calendar, Clock, Globe,
+  Ticket, Music, Lightbulb, Headphones,
 } from 'lucide-react';
 import { Card, Badge, Button } from '@/components/ui';
 import { StubItButton } from '@/components/ui/StubItButton';
@@ -13,6 +13,11 @@ import { isTicketPurchaseUrl, getTicketSourceLinks } from '@/utils/ticketUrl';
 import { generateEventBriefing } from '@/services/ai/briefings';
 import { getArtistDisplayImage } from '@/utils/artistImage';
 import type { AiEventBriefing } from '@/types';
+
+/** Remove footnote references like [1], [2][3], [10] from AI-generated text */
+function stripFootnotes(text: string): string {
+  return text.replace(/\[\d+\]/g, '').replace(/\s{2,}/g, ' ').trim();
+}
 
 /**
  * Safely convert a Firebase Timestamp (or its serialized form from router state)
@@ -205,8 +210,7 @@ export function EventPage(): React.JSX.Element {
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium
                 bg-stub-amber/15 text-stub-amber hover:bg-stub-amber/25 transition-colors"
             >
-              <Ticket className="w-4 h-4" />
-              Tickets
+              🎟️ Tickets
             </a>
           )}
           <StubItButton onClick={handleStubIt} />
@@ -215,8 +219,7 @@ export function EventPage(): React.JSX.Element {
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium
               bg-stub-cyan/10 text-stub-cyan hover:bg-stub-cyan/20 transition-colors"
           >
-            <Share2 className="w-4 h-4" />
-            Share
+            📤 Share
           </button>
           {venue && (
             <a
@@ -226,104 +229,29 @@ export function EventPage(): React.JSX.Element {
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium
                 bg-stub-green/10 text-stub-green hover:bg-stub-green/20 transition-colors"
             >
-              <Navigation className="w-4 h-4" />
-              Directions
+              📍 Directions
             </a>
           )}
-        </div>
-
-        {/* Artist & Venue Cards — side by side */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="grid grid-cols-2 gap-3 mb-6"
-        >
-          {/* Artist Card */}
+          <div className="flex-1" />
           {artist && (
-            <div
+            <button
               onClick={() => navigate(`/artist/${event.artistIds[0]}`)}
-              className="cursor-pointer"
-              role="link"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium
+                bg-stub-surface text-stub-text border border-stub-border hover:border-stub-amber/30 hover:bg-stub-surface-hover transition-colors"
             >
-              <Card className="h-full hover:border-stub-amber/30 transition-colors">
-                <div className="flex flex-col items-center text-center">
-                  {artist.images.primary ? (
-                    <img
-                      src={artist.images.primary}
-                      alt={artist.name}
-                      className="w-14 h-14 rounded-full object-cover mb-2"
-                    />
-                  ) : (
-                    <div className="w-14 h-14 rounded-full bg-gradient-to-br from-stub-amber/15 to-stub-coral/15 flex items-center justify-center mb-2">
-                      <span className="text-lg font-display font-bold text-stub-amber/40">{artist.name.charAt(0)}</span>
-                    </div>
-                  )}
-                  <h3 className="font-display font-bold text-stub-text text-sm leading-tight truncate w-full">{artist.name}</h3>
-                  {artist.genres.length > 0 && (
-                    <div className="flex flex-wrap justify-center gap-1 mt-1.5">
-                      {artist.genres.slice(0, 2).map((g) => (
-                        <Badge key={g} variant="coral" className="text-[9px]">{g}</Badge>
-                      ))}
-                    </div>
-                  )}
-                  {(artist.externalIds.websiteUrl || artist.aiBriefing?.websiteUrl) && (
-                    <a
-                      href={artist.externalIds.websiteUrl || artist.aiBriefing?.websiteUrl || ''}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={(e) => e.stopPropagation()}
-                      className="inline-flex items-center gap-1 text-[11px] text-stub-cyan hover:text-stub-cyan/80 transition-colors mt-2"
-                    >
-                      <Globe className="w-3 h-3" />
-                      Official Site
-                    </a>
-                  )}
-                </div>
-              </Card>
-            </div>
+              🎤 {artist.name}
+            </button>
           )}
-
-          {/* Venue Card */}
           {venue && (
-            <div
+            <button
               onClick={() => navigate(`/venue/${venue.id}`)}
-              className="cursor-pointer"
-              role="link"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium
+                bg-stub-surface text-stub-text border border-stub-border hover:border-stub-cyan/30 hover:bg-stub-surface-hover transition-colors"
             >
-              <Card className="h-full hover:border-stub-amber/30 transition-colors">
-                <div className="flex flex-col items-center text-center">
-                  {venue.images?.primary ? (
-                    <img
-                      src={venue.images.primary}
-                      alt={venue.name}
-                      className="w-14 h-14 rounded-lg object-cover mb-2"
-                    />
-                  ) : (
-                    <div className="w-14 h-14 rounded-lg bg-gradient-to-br from-stub-cyan/15 to-stub-amber/15 flex items-center justify-center mb-2">
-                      <MapPin className="w-5 h-5 text-stub-cyan/40" />
-                    </div>
-                  )}
-                  <h3 className="font-display font-bold text-stub-text text-sm leading-tight truncate w-full">{venue.name}</h3>
-                  <p className="text-[11px] text-stub-muted mt-0.5 truncate w-full">{venue.city}, {venue.state}</p>
-                  <Badge variant="muted" className="text-[9px] mt-1.5">{venue.venueType}</Badge>
-                  {venue.website && (
-                    <a
-                      href={venue.website}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={(e) => e.stopPropagation()}
-                      className="inline-flex items-center gap-1 text-[11px] text-stub-cyan hover:text-stub-cyan/80 transition-colors mt-2"
-                    >
-                      <Globe className="w-3 h-3" />
-                      Official Site
-                    </a>
-                  )}
-                </div>
-              </Card>
-            </div>
+              🏛️ {venue.name}
+            </button>
           )}
-        </motion.div>
+        </div>
 
         {/* AI Event Briefing */}
         {(briefing || briefingLoading) && (
@@ -342,7 +270,7 @@ export function EventPage(): React.JSX.Element {
                 <div className="space-y-4">
                   {/* Show Preview */}
                   <div>
-                    <p className="text-sm text-stub-text leading-relaxed">{briefing.showPreview}</p>
+                    <p className="text-sm text-stub-text leading-relaxed">{stripFootnotes(briefing.showPreview)}</p>
                   </div>
 
                   {/* Venue Insight */}
@@ -351,7 +279,7 @@ export function EventPage(): React.JSX.Element {
                       <MapPin className="w-3.5 h-3.5 text-stub-cyan" />
                       <span className="text-xs font-medium text-stub-cyan uppercase tracking-wider">Venue Insight</span>
                     </div>
-                    <p className="text-sm text-stub-muted leading-relaxed">{briefing.venueInsight}</p>
+                    <p className="text-sm text-stub-muted leading-relaxed">{stripFootnotes(briefing.venueInsight)}</p>
                   </div>
 
                   {/* Pro Tips */}
@@ -365,7 +293,7 @@ export function EventPage(): React.JSX.Element {
                         {briefing.proTips.map((tip, i) => (
                           <li key={i} className="text-sm text-stub-muted flex items-start gap-2">
                             <span className="text-stub-amber/60 mt-0.5">•</span>
-                            {tip}
+                            {stripFootnotes(tip)}
                           </li>
                         ))}
                       </ul>
@@ -376,12 +304,18 @@ export function EventPage(): React.JSX.Element {
                   {briefing.listeningGuide.length > 0 && (
                     <div>
                       <div className="flex items-center gap-1.5 mb-2">
-                        <Headphones className="w-3.5 h-3.5 text-stub-coral" />
-                        <span className="text-xs font-medium text-stub-coral uppercase tracking-wider">Pre-Show Listening</span>
+                        <Headphones className="w-3.5 h-3.5 text-stub-violet" />
+                        <span className="text-xs font-medium text-stub-violet uppercase tracking-wider">Pre-Show Listening</span>
                       </div>
                       <div className="flex flex-wrap gap-1.5">
                         {briefing.listeningGuide.map((song) => (
-                          <Badge key={song} variant="muted">{song}</Badge>
+                          <Link
+                            key={song}
+                            to={`/artist/${event.artistIds[0]}?tab=youtube`}
+                            className="hover:opacity-80 transition-opacity"
+                          >
+                            <Badge variant="muted">{song}</Badge>
+                          </Link>
                         ))}
                       </div>
                     </div>

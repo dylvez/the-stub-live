@@ -215,11 +215,6 @@ export function EventCard({
             </div>
 
             <div className="flex items-center gap-2">
-              {priceMin !== undefined && (
-                <span className="text-xs font-mono text-stub-muted">
-                  ${priceMin}{priceMax && priceMax !== priceMin ? `–$${priceMax}` : ''}
-                </span>
-              )}
               {attendeeCount !== undefined && attendeeCount > 0 && (
                 <span className="flex items-center gap-0.5 text-xs text-stub-muted">
                   <Users className="w-3 h-3" />

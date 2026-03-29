@@ -572,18 +572,16 @@ function EventRow({
           </div>
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          {!isPast && event.priceRange && (
-            <span className="text-xs font-mono text-stub-muted">${event.priceRange.min}</span>
-          )}
           {!isPast && event.ticketUrl && (
             <a
               href={event.ticketUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-stub-amber hover:text-stub-amber-dim transition-colors"
-              title="Get Tickets"
+              onClick={(e) => e.stopPropagation()}
+              className="inline-flex items-center gap-1 text-xs text-stub-amber hover:text-stub-amber-dim transition-colors"
             >
-              <ExternalLink className="w-4 h-4" />
+              <ExternalLink className="w-3 h-3" />
+              Tickets
             </a>
           )}
           <StubItButton onClick={onStubIt} />

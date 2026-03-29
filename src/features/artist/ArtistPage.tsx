@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import {
@@ -22,9 +22,11 @@ type ArtistTab = 'shows' | 'recent' | 'youtube';
 export function ArtistPage(): React.JSX.Element {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const initialTab = (searchParams.get('tab') as ArtistTab) || 'shows';
   const { artist, lastfmInfo, mbArtist, isLoading: artistLoading } = useArtist(id);
   const { events: allEvents, venues } = useEvents({ artistId: id });
-  const [activeTab, setActiveTab] = useState<ArtistTab>('shows');
+  const [activeTab, setActiveTab] = useState<ArtistTab>(initialTab);
   const [videos, setVideos] = useState<YouTubeVideo[]>([]);
   const [setlists, setSetlists] = useState<SetlistResult[]>([]);
   const [briefing, setBriefing] = useState<AiBriefing | null>(artist?.aiBriefing ?? null);
@@ -303,21 +305,16 @@ export function ArtistPage(): React.JSX.Element {
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
-                          {event.priceRange && (
-                            <span className="text-xs font-mono text-stub-muted">
-                              ${event.priceRange.min}
-                              {event.priceRange.max !== event.priceRange.min && `–$${event.priceRange.max}`}
-                            </span>
-                          )}
                           {event.ticketUrl && (
                             <a
                               href={event.ticketUrl}
                               target="_blank"
                               rel="noopener noreferrer"
                               onClick={(e) => e.stopPropagation()}
-                              className="text-stub-amber hover:text-stub-amber-dim transition-colors"
+                              className="inline-flex items-center gap-1 text-xs text-stub-amber hover:text-stub-amber-dim transition-colors"
                             >
-                              <ExternalLink className="w-4 h-4" />
+                              <ExternalLink className="w-3 h-3" />
+                              Tickets
                             </a>
                           )}
                           <StubItButton onClick={() => {
