@@ -198,25 +198,36 @@ export function EventPage(): React.JSX.Element {
         {/* Action Buttons */}
         <div className="flex flex-wrap gap-2 mb-6">
           {hasTicketUrl && (
-            <a href={event.ticketUrl} target="_blank" rel="noopener noreferrer">
-              <Button variant="primary" icon={<Ticket className="w-4 h-4" />}>
-                {getTicketPlatformName(event.ticketUrl!)}
-              </Button>
+            <a
+              href={event.ticketUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium
+                bg-stub-amber/15 text-stub-amber hover:bg-stub-amber/25 transition-colors"
+            >
+              <Ticket className="w-4 h-4" />
+              {getTicketPlatformName(event.ticketUrl!)}
             </a>
           )}
           <StubItButton onClick={handleStubIt} />
-          <Button variant="secondary" icon={<Share2 className="w-4 h-4" />} onClick={handleShare}>
+          <button
+            onClick={handleShare}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium
+              bg-stub-surface text-stub-muted border border-stub-border hover:text-stub-text hover:bg-stub-surface-hover transition-colors"
+          >
+            <Share2 className="w-4 h-4" />
             Share
-          </Button>
+          </button>
           {venue && (
             <a
               href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${venue.name} ${venue.address} ${venue.city} ${venue.state}`)}`}
               target="_blank"
               rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium
+                bg-stub-surface text-stub-muted border border-stub-border hover:text-stub-text hover:bg-stub-surface-hover transition-colors"
             >
-              <Button variant="secondary" icon={<Navigation className="w-4 h-4" />}>
-                Directions
-              </Button>
+              <Navigation className="w-4 h-4" />
+              Directions
             </a>
           )}
         </div>
