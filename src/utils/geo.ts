@@ -1,6 +1,14 @@
-import { US_CITIES, type CityEntry } from '@/data/cities';
+import { apiKeys } from '@/services/api/config';
+
+export interface CityEntry {
+  city: string;
+  state: string;
+  lat: number;
+  lng: number;
+}
 
 const EARTH_RADIUS_MILES = 3958.8;
+const PLACES_API_BASE = 'https://places.googleapis.com/v1';
 
 function toRadians(degrees: number): number {
   return degrees * (Math.PI / 180);
@@ -29,52 +37,116 @@ export function haversineDistance(
 }
 
 /**
- * Finds the nearest city from the US_CITIES list to the given coordinates.
+ * Reverse-geocode coordinates to a city name using Google Places Nearby Search.
+ * Falls back to a generic label if the API isn't configured or fails.
  */
-export function findNearestCity(lat: number, lng: number): CityEntry {
-  let nearest = US_CITIES[0];
-  let minDistance = Infinity;
-
-  for (const city of US_CITIES) {
-    const distance = haversineDistance(lat, lng, city.lat, city.lng);
-    if (distance < minDistance) {
-      minDistance = distance;
-      nearest = city;
-    }
+export async function findNearestCity(lat: number, lng: number): Promise<CityEntry> {
+  if (apiKeys.googleMaps) {
+    try {
+      const res = await fetch(`${PLACES_API_BASE}/places:searchNearby`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Goog-Api-Key': apiKeys.googleMaps,
+          'X-Goog-FieldMask': 'places.displayName,places.addressComponents,places.location',
+        },
+        body: JSON.stringify({
+          locationRestriction: {
+            circle: { center: { latitude: lat, longitude: lng }, radiusMeters: 50000 },
+          },
+          includedTypes: ['locality'],
+          maxResultCount: 1,
+        }),
+      });
+      const data = await res.json();
+      const place = data.places?.[0];
+      if (place) {
+        return parsePlaceResult(place, lat, lng);
+      }
+    } catch { /* fall through */ }
   }
-
-  return nearest;
+  return { city: 'My Location', state: '', lat, lng };
 }
 
 /**
- * Searches cities by case-insensitive prefix match on city name or "city, state" format.
- * @param query - Search string
- * @param limit - Maximum results to return (default 8)
+ * Search for US cities/towns by name using Google Places Text Search (New) API.
+ * Accepts any city, town, or place name — not limited to a preset list.
  */
-export function searchCities(query: string, limit: number = 8): CityEntry[] {
-  if (!query.trim()) {
+export async function searchCities(query: string, limit: number = 8): Promise<CityEntry[]> {
+  const trimmed = query.trim();
+  if (!trimmed || !apiKeys.googleMaps) return [];
+
+  try {
+    const res = await fetch(`${PLACES_API_BASE}/places:searchText`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Goog-Api-Key': apiKeys.googleMaps,
+        'X-Goog-FieldMask': 'places.displayName,places.addressComponents,places.location,places.formattedAddress',
+      },
+      body: JSON.stringify({
+        textQuery: `${trimmed} city`,
+        includedType: 'locality',
+        languageCode: 'en',
+        regionCode: 'US',
+        maxResultCount: limit,
+      }),
+    });
+    const data = await res.json();
+
+    if (!data.places) return [];
+
+    const cities: CityEntry[] = [];
+    const seen = new Set<string>();
+
+    for (const place of data.places) {
+      if (cities.length >= limit) break;
+      const entry = parsePlaceResult(place);
+      if (!entry.city) continue;
+      // Filter to US results only
+      const isUS = place.addressComponents?.some(
+        (c: { types: string[]; shortText: string }) => c.types.includes('country') && c.shortText === 'US'
+      );
+      if (!isUS) continue;
+      const key = `${entry.city}|${entry.state}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      cities.push(entry);
+    }
+
+    return cities;
+  } catch {
     return [];
   }
+}
 
-  const normalizedQuery = query.trim().toLowerCase();
-  const results: CityEntry[] = [];
+/** Extract city, state, lat, lng from a Google Places (New) API result */
+function parsePlaceResult(
+  place: {
+    displayName?: { text: string };
+    addressComponents?: Array<{ types: string[]; longText: string; shortText: string }>;
+    location?: { latitude: number; longitude: number };
+  },
+  fallbackLat?: number,
+  fallbackLng?: number,
+): CityEntry {
+  let city = place.displayName?.text ?? '';
+  let state = '';
 
-  for (const city of US_CITIES) {
-    if (results.length >= limit) break;
-
-    const cityName = city.city.toLowerCase();
-    const cityState = `${city.city}, ${city.state}`.toLowerCase();
-
-    if (cityName.startsWith(normalizedQuery) || cityState.startsWith(normalizedQuery)) {
-      // Avoid duplicates (some cities appear more than once in the list)
-      const isDuplicate = results.some(
-        (r) => r.city === city.city && r.state === city.state
-      );
-      if (!isDuplicate) {
-        results.push(city);
+  if (place.addressComponents) {
+    for (const comp of place.addressComponents) {
+      if (comp.types.includes('locality')) {
+        city = comp.longText;
+      } else if (comp.types.includes('administrative_area_level_1')) {
+        state = comp.shortText;
       }
     }
   }
 
-  return results;
+  return {
+    city,
+    state,
+    lat: place.location?.latitude ?? fallbackLat ?? 0,
+    lng: place.location?.longitude ?? fallbackLng ?? 0,
+  };
 }

@@ -1,8 +1,9 @@
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Navigation, Search, MapPin, Check } from 'lucide-react';
 import { Modal, Input, Button } from '@/components/ui';
+import { BrandedSpinner } from '@/components/ui/BrandedSpinner';
 import { searchCities } from '@/utils/geo';
-import type { CityEntry } from '@/data/cities';
+import type { CityEntry } from '@/utils/geo';
 import type { UserLocation } from '@/types';
 
 interface LocationPickerProps {
@@ -23,11 +24,32 @@ export function LocationPicker({
   isDetecting,
 }: LocationPickerProps): React.JSX.Element {
   const [query, setQuery] = useState('');
+  const [results, setResults] = useState<CityEntry[]>([]);
+  const [searching, setSearching] = useState(false);
   const [radius, setRadius] = useState(currentLocation.radiusMiles);
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
-  const results = useMemo(() => {
-    if (query.length < 2) return [];
-    return searchCities(query, 8);
+  // Debounced async city search
+  useEffect(() => {
+    if (query.length < 2) {
+      setResults([]);
+      setSearching(false);
+      return;
+    }
+
+    setSearching(true);
+    clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      searchCities(query, 8).then((cities) => {
+        setResults(cities);
+        setSearching(false);
+      }).catch(() => {
+        setResults([]);
+        setSearching(false);
+      });
+    }, 300);
+
+    return () => clearTimeout(debounceRef.current);
   }, [query]);
 
   function selectCity(city: CityEntry): void {
@@ -39,12 +61,12 @@ export function LocationPicker({
       radiusMiles: radius,
     });
     setQuery('');
+    setResults([]);
     onClose();
   }
 
   function handleRadiusChange(newRadius: number): void {
     setRadius(newRadius);
-    // Update current location with new radius
     onSelect({
       ...currentLocation,
       radiusMiles: newRadius,
@@ -63,7 +85,7 @@ export function LocationPicker({
         <MapPin className="w-4 h-4 text-stub-amber shrink-0" />
         <div className="flex-1 min-w-0">
           <div className="text-sm font-semibold text-stub-text">
-            {currentLocation.city}, {currentLocation.state}
+            {currentLocation.city}{currentLocation.state ? `, ${currentLocation.state}` : ''}
           </div>
           <div className="text-xs text-stub-muted">{currentLocation.radiusMiles}mi radius</div>
         </div>
@@ -86,7 +108,7 @@ export function LocationPicker({
       <div className="mb-4">
         <Input
           icon="search"
-          placeholder="Search cities..."
+          placeholder="Search any US city or town..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
@@ -99,7 +121,7 @@ export function LocationPicker({
             const isSelected = city.city === currentLocation.city && city.state === currentLocation.state;
             return (
               <button
-                key={`${city.city}-${city.state}`}
+                key={`${city.city}-${city.state}-${city.lat}`}
                 onClick={() => selectCity(city)}
                 className={`w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors
                   ${isSelected
@@ -110,7 +132,7 @@ export function LocationPicker({
                 <MapPin className={`w-4 h-4 shrink-0 ${isSelected ? 'text-stub-amber' : 'text-stub-muted'}`} />
                 <div className="flex-1 min-w-0">
                   <span className="text-sm text-stub-text">{city.city}</span>
-                  <span className="text-sm text-stub-muted">, {city.state}</span>
+                  {city.state && <span className="text-sm text-stub-muted">, {city.state}</span>}
                 </div>
                 {isSelected && <Check className="w-4 h-4 text-stub-amber shrink-0" />}
               </button>
@@ -119,7 +141,14 @@ export function LocationPicker({
         </div>
       )}
 
-      {query.length >= 2 && results.length === 0 && (
+      {searching && (
+        <div className="flex items-center justify-center gap-2 py-4 text-stub-muted text-sm mb-4">
+          <BrandedSpinner size={16} />
+          Searching...
+        </div>
+      )}
+
+      {query.length >= 2 && !searching && results.length === 0 && (
         <div className="text-center py-4 text-stub-muted text-sm mb-4">
           <Search className="w-5 h-5 mx-auto mb-1 text-stub-border-light" />
           No cities found for &ldquo;{query}&rdquo;

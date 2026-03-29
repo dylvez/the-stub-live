@@ -73,7 +73,7 @@ export function LocationProvider({ children }: { children: ReactNode }): React.J
 
       // Dynamic import to avoid loading city data until needed
       const { findNearestCity } = await import('@/utils/geo');
-      const nearest = findNearestCity(position.coords.latitude, position.coords.longitude);
+      const nearest = await findNearestCity(position.coords.latitude, position.coords.longitude);
 
       const detectedLocation: UserLocation = {
         city: nearest.city,
