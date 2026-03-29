@@ -195,31 +195,6 @@ export function EventPage(): React.JSX.Element {
       </div>
 
       <div className="px-4 -mt-2 relative z-10">
-        {/* Quick Info Grid */}
-        <div className="grid grid-cols-3 gap-3 mb-6">
-          <Card className="text-center py-3">
-            <Calendar className="w-4 h-4 text-stub-amber mx-auto mb-1" />
-            <p className="text-xs text-stub-muted">Date</p>
-            <p className="text-sm font-mono text-stub-text">
-              {eventDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
-            </p>
-          </Card>
-          <Card className="text-center py-3">
-            <Clock className="w-4 h-4 text-stub-amber mx-auto mb-1" />
-            <p className="text-xs text-stub-muted">{doorsTimeStr && showTimeStr && doorsTimeStr !== showTimeStr ? 'Doors / Show' : 'Time'}</p>
-            <p className="text-sm font-mono text-stub-text">
-              {doorsTimeStr && showTimeStr && doorsTimeStr !== showTimeStr
-                ? `${doorsTimeStr} / ${showTimeStr}`
-                : showTimeStr ?? 'TBA'}
-            </p>
-          </Card>
-          <Card className="text-center py-3">
-            <Ticket className="w-4 h-4 text-stub-amber mx-auto mb-1" />
-            <p className="text-xs text-stub-muted">Price</p>
-            <p className="text-sm font-mono text-stub-text">{priceStr ?? 'TBA'}</p>
-          </Card>
-        </div>
-
         {/* Action Buttons */}
         <div className="flex flex-wrap gap-2 mb-6">
           {hasTicketUrl && (
