@@ -19,6 +19,7 @@ import { searchLivePerformances, type YouTubeVideo } from '@/services/api/youtub
 import { convertSetlistsToEvents } from '@/utils/setlistToEvent';
 import { generateVenueBriefing, type VenueBriefing } from '@/services/ai/venueBriefing';
 import type { EventData, ArtistData } from '@/types';
+import { stripFootnotes } from '@/utils/stripFootnotes';
 
 export function VenuePage(): React.JSX.Element {
   const { id } = useParams<{ id: string }>();
@@ -258,14 +259,14 @@ export function VenuePage(): React.JSX.Element {
 
             {venueBriefing ? (
               <div className="space-y-4">
-                <p className="text-sm text-stub-text leading-relaxed">{venueBriefing.overview}</p>
+                <p className="text-sm text-stub-text leading-relaxed">{stripFootnotes(venueBriefing.overview)}</p>
 
                 <div>
                   <div className="flex items-center gap-1.5 mb-1">
                     <Music className="w-3.5 h-3.5 text-stub-cyan" />
                     <span className="text-xs font-medium text-stub-cyan uppercase tracking-wider">Atmosphere</span>
                   </div>
-                  <p className="text-sm text-stub-muted leading-relaxed">{venueBriefing.atmosphere}</p>
+                  <p className="text-sm text-stub-muted leading-relaxed">{stripFootnotes(venueBriefing.atmosphere)}</p>
                 </div>
 
                 {venueBriefing.tips.length > 0 && (
@@ -278,7 +279,7 @@ export function VenuePage(): React.JSX.Element {
                       {venueBriefing.tips.map((tip, i) => (
                         <li key={i} className="text-sm text-stub-muted flex items-start gap-2">
                           <span className="text-stub-amber/60 mt-0.5">•</span>
-                          {tip}
+                          {stripFootnotes(tip)}
                         </li>
                       ))}
                     </ul>

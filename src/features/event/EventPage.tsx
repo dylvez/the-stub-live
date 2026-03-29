@@ -15,11 +15,7 @@ import { isTicketPurchaseUrl } from '@/utils/ticketUrl';
 import { generateEventBriefing } from '@/services/ai/briefings';
 import { getArtistDisplayImage } from '@/utils/artistImage';
 import type { AiEventBriefing } from '@/types';
-
-/** Remove footnote references like [1], [2][3], [10] from AI-generated text */
-function stripFootnotes(text: string): string {
-  return text.replace(/\[\d+\]/g, '').replace(/\s{2,}/g, ' ').trim();
-}
+import { stripFootnotes } from '@/utils/stripFootnotes';
 
 /**
  * Safely convert a Firebase Timestamp (or its serialized form from router state)

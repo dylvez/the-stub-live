@@ -14,6 +14,7 @@ import { useEvents } from '@/hooks/useEvents';
 import { generateArtistBriefing, searchArtistImage } from '@/services/ai/briefings';
 import type { AiBriefing } from '@/types';
 import { formatSetlistDate } from '@/utils/setlistToEvent';
+import { stripFootnotes } from '@/utils/stripFootnotes';
 import { searchLivePerformances, type YouTubeVideo } from '@/services/api/youtube';
 import { getArtistSetlists, type SetlistResult } from '@/services/api/setlistfm';
 
@@ -199,15 +200,15 @@ export function ArtistPage(): React.JSX.Element {
 
               {briefing ? (
                 <>
-                  <p className="text-stub-text text-sm leading-relaxed mb-3">{briefing.summary}</p>
+                  <p className="text-stub-text text-sm leading-relaxed mb-3">{stripFootnotes(briefing.summary)}</p>
                   <div className="space-y-2">
                     <div>
                       <span className="text-xs text-stub-muted uppercase tracking-wider">Sounds Like</span>
-                      <p className="text-sm text-stub-text mt-0.5">{briefing.soundDescription}</p>
+                      <p className="text-sm text-stub-text mt-0.5">{stripFootnotes(briefing.soundDescription)}</p>
                     </div>
                     <div>
                       <span className="text-xs text-stub-muted uppercase tracking-wider">Live</span>
-                      <p className="text-sm text-stub-text mt-0.5">{briefing.liveReputation}</p>
+                      <p className="text-sm text-stub-text mt-0.5">{stripFootnotes(briefing.liveReputation)}</p>
                     </div>
                   </div>
                 </>
