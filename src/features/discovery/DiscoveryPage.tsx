@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect, useCallback, lazy, Suspense } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Flame, Filter, MapPin, RefreshCw, AlertCircle, Map as MapIcon, List, Sparkles } from 'lucide-react';
+import { Flame, MapPin, RefreshCw, AlertCircle, Map as MapIcon, List, Sparkles } from 'lucide-react';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '@/services/firebase/config';
 import { EventCard } from '@/components/stub';
@@ -20,9 +20,9 @@ const EventMap = lazy(() => import('@/components/map/EventMap').then((m) => ({ d
 /** Map raw genre strings to canonical display names */
 const GENRE_CANONICAL: Record<string, string> = {
   'rock': 'Rock',
-  'alternative': 'Alternative',
-  'alt-rock': 'Alternative',
-  'alternative rock': 'Alternative',
+  'alternative': 'Alt/Indie',
+  'alt-rock': 'Alt/Indie',
+  'alternative rock': 'Alt/Indie',
   'punk': 'Punk',
   'punk-rock': 'Punk',
   'pop-punk': 'Punk',
@@ -50,8 +50,8 @@ const GENRE_CANONICAL: Record<string, string> = {
   'rnb': 'R&B',
   'soul': 'R&B',
   'pop': 'Pop',
-  'indie': 'Indie',
-  'indie-rock': 'Indie',
+  'indie': 'Alt/Indie',
+  'indie-rock': 'Alt/Indie',
   'blues': 'Blues',
   'blues-rock': 'Blues',
   'reggae': 'Reggae',
@@ -237,31 +237,6 @@ export function DiscoveryPage(): React.JSX.Element {
       {/* Shows content */}
       {<>
 
-      {/* List/Map toggle */}
-      {isGoogleMapsConfigured && (
-        <div className="flex justify-end mb-3">
-          <div className="flex bg-stub-surface rounded-lg border border-stub-border overflow-hidden">
-            <button
-              onClick={() => setViewMode('list')}
-              className={`flex items-center gap-1 px-3 py-1.5 text-xs transition-colors ${
-                viewMode === 'list' ? 'bg-stub-amber/10 text-stub-amber' : 'text-stub-muted hover:text-stub-text'
-              }`}
-            >
-              <List className="w-3.5 h-3.5" />
-              List
-            </button>
-            <button
-              onClick={() => setViewMode('map')}
-              className={`flex items-center gap-1 px-3 py-1.5 text-xs transition-colors ${
-                viewMode === 'map' ? 'bg-stub-amber/10 text-stub-amber' : 'text-stub-muted hover:text-stub-text'
-              }`}
-            >
-              <MapIcon className="w-3.5 h-3.5" />
-              Map
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* Map view */}
       {viewMode === 'map' && isGoogleMapsConfigured && (
@@ -467,10 +442,29 @@ export function DiscoveryPage(): React.JSX.Element {
 
       {/* Genre filter bar */}
       <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-1 -mx-4 px-4">
-        <Button size="sm" variant="ghost" icon={<Filter className="w-3.5 h-3.5" />}>
-          Filter
-        </Button>
-        <div className="w-px h-5 bg-stub-border" />
+        {isGoogleMapsConfigured && (<>
+          <div className="flex bg-stub-surface rounded-lg border border-stub-border overflow-hidden shrink-0">
+            <button
+              onClick={() => setViewMode('list')}
+              className={`flex items-center gap-1 px-2.5 py-1.5 text-xs transition-colors ${
+                viewMode === 'list' ? 'bg-stub-amber/10 text-stub-amber' : 'text-stub-muted hover:text-stub-text'
+              }`}
+            >
+              <List className="w-3.5 h-3.5" />
+              List
+            </button>
+            <button
+              onClick={() => setViewMode('map')}
+              className={`flex items-center gap-1 px-2.5 py-1.5 text-xs transition-colors ${
+                viewMode === 'map' ? 'bg-stub-amber/10 text-stub-amber' : 'text-stub-muted hover:text-stub-text'
+              }`}
+            >
+              <MapIcon className="w-3.5 h-3.5" />
+              Map
+            </button>
+          </div>
+          <div className="w-px h-5 bg-stub-border shrink-0" />
+        </>)}
         {genreFilters.map((genre) => (
           <FilterChip
             key={genre}
