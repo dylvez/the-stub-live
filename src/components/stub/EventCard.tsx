@@ -245,7 +245,7 @@ export function EventCard({
                 ))}
               </div>
             ) : <div />}
-            <div className="flex items-center justify-end gap-1.5 sm:gap-2 shrink-0">
+            <div className="flex items-center sm:justify-end gap-1.5 sm:gap-2 shrink-0">
               {hasTicketUrl && resolvedTicketUrl && (
                 <span onClick={(e) => e.stopPropagation()}>
                   {/* xs on mobile, sm on desktop */}
