@@ -36,5 +36,8 @@ dist-ssr
 .claude/
 .superpowers/
 
+# Marketing assets (non-code)
+marketing/
+
 # Windows artifacts
 nul
