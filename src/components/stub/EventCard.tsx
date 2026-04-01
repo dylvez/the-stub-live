@@ -4,6 +4,7 @@ import { MapPin, Calendar, Clock, ExternalLink, Users, Ticket } from 'lucide-rea
 import { Badge, Button } from '@/components/ui';
 import { StubItButton } from '@/components/ui/StubItButton';
 import { getArtistDisplayImage } from '@/utils/artistImage';
+import { canonicalizeGenres } from '@/utils/genres';
 import { isTicketPurchaseUrl } from '@/utils/ticketUrl';
 import { useTicketLookup } from '@/hooks/useTicketLookup';
 import type { EventData, ArtistData, VenueData } from '@/types';
@@ -92,6 +93,7 @@ export function EventCard({
   onClick,
 }: EventCardProps): React.JSX.Element {
   const navigate = useNavigate();
+  const canonicalGenres = canonicalizeGenres(genres, 2);
   const accent = getGenreAccent(genres);
   const displayImage = getArtistDisplayImage(artistImage, genres, artistName, venueImage);
 
@@ -232,23 +234,25 @@ export function EventCard({
             </div>
           </div>
 
-          {/* Genres + Actions row */}
-          <div className="flex items-center justify-between mt-2">
-            {genres && genres.length > 0 ? (
-              <div className="flex flex-wrap gap-1">
-                {genres.slice(0, 3).map((g) => (
+          {/* Genres + Actions — single row on sm+, stacked on mobile */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mt-2">
+            {canonicalGenres.length > 0 ? (
+              <div className="flex items-center gap-1">
+                {canonicalGenres.map((g) => (
                   <span key={g} className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${accent.badge}`}>
                     {g}
                   </span>
                 ))}
               </div>
             ) : <div />}
-            <div className="flex items-center gap-2 shrink-0">
+            <div className="flex items-center justify-end gap-1.5 sm:gap-2 shrink-0">
               {hasTicketUrl && resolvedTicketUrl && (
                 <span onClick={(e) => e.stopPropagation()}>
-                  <Button variant="tinted" tintColor="amber" shape="pill" size="sm"
+                  {/* xs on mobile, sm on desktop */}
+                  <Button variant="tinted" tintColor="amber" shape="pill" size="xs"
                     href={resolvedTicketUrl} target="_blank" rel="noopener noreferrer"
-                    icon={<Ticket className="w-4 h-4" />}
+                    icon={<Ticket className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
+                    className="sm:px-3 sm:py-1.5 sm:text-sm sm:gap-1.5"
                   >
                     Tickets
                   </Button>

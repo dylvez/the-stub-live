@@ -17,47 +17,7 @@ import type { VenueData } from '@/types';
 // FeedPage removed — sharing is now via social platforms
 const EventMap = lazy(() => import('@/components/map/EventMap').then((m) => ({ default: m.EventMap })));
 
-/** Map raw genre strings to canonical display names */
-const GENRE_CANONICAL: Record<string, string> = {
-  'rock': 'Rock',
-  'alternative': 'Alt/Indie',
-  'alt-rock': 'Alt/Indie',
-  'alternative rock': 'Alt/Indie',
-  'punk': 'Punk',
-  'punk-rock': 'Punk',
-  'pop-punk': 'Punk',
-  'hardcore': 'Punk',
-  'metal': 'Metal',
-  'heavy-metal': 'Metal',
-  'death-metal': 'Metal',
-  'black-metal': 'Metal',
-  'jazz': 'Jazz',
-  'folk': 'Folk',
-  'americana': 'Folk',
-  'bluegrass': 'Folk',
-  'country': 'Country',
-  'country-music': 'Country',
-  'electronic': 'Electronic',
-  'dance/electronic': 'Electronic',
-  'edm': 'Electronic',
-  'house': 'Electronic',
-  'techno': 'Electronic',
-  'hip-hop': 'Hip-Hop',
-  'hip-hop/rap': 'Hip-Hop',
-  'hip-hop-rap': 'Hip-Hop',
-  'rap': 'Hip-Hop',
-  'r&b': 'R&B',
-  'rnb': 'R&B',
-  'soul': 'R&B',
-  'pop': 'Pop',
-  'indie': 'Alt/Indie',
-  'indie-rock': 'Alt/Indie',
-  'blues': 'Blues',
-  'blues-rock': 'Blues',
-  'reggae': 'Reggae',
-  'classical': 'Classical',
-  'latin': 'Latin',
-};
+import { GENRE_CANONICAL } from '@/utils/genres';
 
 function EventSkeleton(): React.JSX.Element {
   return (

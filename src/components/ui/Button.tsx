@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import type { ReactNode, MouseEventHandler } from 'react';
 
 type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'tinted';
-type ButtonSize = 'sm' | 'md' | 'lg';
+type ButtonSize = 'xs' | 'sm' | 'md' | 'lg';
 type ButtonShape = 'default' | 'pill';
 type TintColor = 'amber' | 'coral' | 'cyan' | 'green' | 'violet';
 
@@ -51,6 +51,7 @@ const tintStyles: Record<TintColor, string> = {
 };
 
 const sizeStyles: Record<ButtonSize, string> = {
+  xs: 'px-2 py-1 text-xs gap-1',
   sm: 'px-3 py-1.5 text-sm gap-1.5',
   md: 'px-4 py-2 text-sm gap-2',
   lg: 'px-6 py-3 text-base gap-2',
